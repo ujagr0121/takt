@@ -106,6 +106,11 @@ export class LineTimeSliceBuffer {
       ? boundaryIndex + 1
       : buffer.length;
 
+    if (!canForceFlush && buffer.length > 0 && this.isBoundary(buffer.charAt(0)) && boundaryIndex < 0) {
+      this.scheduleTimer(key);
+      return undefined;
+    }
+
     const flushText = buffer.slice(0, flushIndex);
     const remainder = buffer.slice(flushIndex);
     this.buffers.set(key, remainder);
