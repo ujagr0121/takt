@@ -79,6 +79,7 @@ const RESOLUTION_REGISTRY: Partial<{ [K in ConfigParameterKey]: ResolutionRule<K
   verbose: { layers: ['local', 'global'] },
   autoFetch: { layers: ['global'] },
   baseBranch: { layers: ['local', 'global'] },
+  pieceOverrides: { layers: ['local', 'global'] },
 };
 
 function resolveAnalyticsMerged(

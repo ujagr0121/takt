@@ -10,6 +10,21 @@ export interface PersonaProviderEntry {
   model?: string;
 }
 
+/** Movement-specific quality gates override */
+export interface MovementQualityGatesOverride {
+  qualityGates?: string[];
+}
+
+/** Piece-level overrides (quality_gates, etc.) */
+export interface PieceOverrides {
+  /** Global quality gates applied to all movements */
+  qualityGates?: string[];
+  /** Whether to apply quality_gates only to edit: true movements */
+  qualityGatesEditOnly?: boolean;
+  /** Movement-specific quality gates overrides */
+  movements?: Record<string, MovementQualityGatesOverride>;
+}
+
 /** Custom agent configuration */
 export interface CustomAgentConfig {
   name: string;
@@ -138,6 +153,8 @@ export interface PersistedGlobalConfig {
   autoFetch: boolean;
   /** Base branch to clone from (default: current branch) */
   baseBranch?: string;
+  /** Piece-level overrides (quality_gates, etc.) */
+  pieceOverrides?: PieceOverrides;
 }
 
 /** Project-level configuration */
@@ -152,6 +169,8 @@ export interface ProjectConfig {
   concurrency?: number;
   /** Base branch to clone from (overrides global baseBranch) */
   baseBranch?: string;
+  /** Piece-level overrides (quality_gates, etc.) */
+  pieceOverrides?: PieceOverrides;
   /** Compatibility flag for full submodule acquisition when submodules is unset */
   withSubmodules?: boolean;
   /** Submodule acquisition mode (all or explicit path list) */
