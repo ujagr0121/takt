@@ -66,7 +66,7 @@ describe('runReportPhase report history behavior', () => {
     }
   });
 
-  it('should overwrite report file and archive previous content to reports-history', async () => {
+  it('should overwrite report file and save versioned copy in the same report directory', async () => {
     // Given
     const reportDir = join(tmpRoot, '.takt', 'runs', 'sample-run', 'reports');
     const step = createStep('05-architect-review.md');
@@ -97,12 +97,11 @@ describe('runReportPhase report history behavior', () => {
     const latestContent = readFileSync(latestPath, 'utf-8');
     expect(latestContent).toBe('Second review result');
 
-    const historyDir = join(tmpRoot, '.takt', 'runs', 'sample-run', 'logs', 'reports-history');
-    const historyFiles = readdirSync(historyDir);
-    expect(historyFiles).toHaveLength(1);
-    expect(historyFiles[0]).toMatch(/^05-architect-review\.\d{8}T\d{6}Z\.md$/);
+    const versionedFiles = readdirSync(reportDir).filter(f => f !== '05-architect-review.md');
+    expect(versionedFiles).toHaveLength(1);
+    expect(versionedFiles[0]).toMatch(/^05-architect-review\.md\.\d{8}T\d{6}Z$/);
 
-    const archivedContent = readFileSync(join(historyDir, historyFiles[0]!), 'utf-8');
+    const archivedContent = readFileSync(join(reportDir, versionedFiles[0]!), 'utf-8');
     expect(archivedContent).toBe('First review result');
   });
 
@@ -144,11 +143,10 @@ describe('runReportPhase report history behavior', () => {
     await runReportPhase(step, 3, ctx);
 
     // Then
-    const historyDir = join(tmpRoot, '.takt', 'runs', 'sample-run', 'logs', 'reports-history');
-    const historyFiles = readdirSync(historyDir).sort();
-    expect(historyFiles).toEqual([
-      '06-qa-review.20260210T061143Z.1.md',
-      '06-qa-review.20260210T061143Z.md',
+    const versionedFiles = readdirSync(reportDir).filter(f => f !== '06-qa-review.md').sort();
+    expect(versionedFiles).toEqual([
+      '06-qa-review.md.20260210T061143Z',
+      '06-qa-review.md.20260210T061143Z.1',
     ]);
   });
 

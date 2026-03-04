@@ -8,6 +8,19 @@ piece_config:
       network_access: true
 max_movements: 20
 initial_movement: plan
+loop_monitors:
+  - cycle:
+      - reviewers
+      - fix_both
+    threshold: 3
+    judge:
+      persona: supervisor
+      instruction_template: loop-monitor-reviewers-fix
+      rules:
+        - condition: converging (findings decreasing, fixes applied)
+          next: fix_both
+        - condition: unproductive (same findings repeating)
+          next: supervise_fix
 movements:
   - name: plan
     edit: false

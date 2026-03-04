@@ -33,6 +33,18 @@ loop_monitors:
           next: ai_review
         - condition: Unproductive (no improvement)
           next: reviewers
+  - cycle:
+      - reviewers
+      - fix
+    threshold: 3
+    judge:
+      persona: supervisor
+      instruction_template: loop-monitor-reviewers-fix
+      rules:
+        - condition: Healthy (findings decreasing, fixes applied)
+          next: reviewers
+        - condition: Unproductive (same findings repeating)
+          next: supervise
 movements:
   - name: plan
     edit: false

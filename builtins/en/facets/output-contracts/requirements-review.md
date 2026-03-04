@@ -20,22 +20,27 @@
 | 1 | {change not in requirements} | `src/file.ts` | Justified/Unnecessary |
 
 ## Current Iteration Findings (new)
-| # | finding_id | Category | Location | Issue | Fix Suggestion |
-|---|------------|----------|----------|-------|----------------|
-| 1 | REQ-NEW-src-file-L42 | Unimplemented | `src/file.ts:42` | Issue description | Fix suggestion |
+| # | finding_id | family_tag | Category | Location | Issue | Fix Suggestion |
+|---|------------|------------|----------|----------|-------|----------------|
+| 1 | REQ-NEW-src-file-L42 | req-gap | Unimplemented | `src/file.ts:42` | Issue description | Fix suggestion |
 
 ## Carry-over Findings (persists)
-| # | finding_id | Previous Evidence | Current Evidence | Issue | Fix Suggestion |
-|---|------------|-------------------|------------------|-------|----------------|
-| 1 | REQ-PERSIST-src-file-L77 | `file:line` | `file:line` | Unresolved | Fix suggestion |
+| # | finding_id | family_tag | Previous Evidence | Current Evidence | Issue | Fix Suggestion |
+|---|------------|------------|-------------------|------------------|-------|----------------|
+| 1 | REQ-PERSIST-src-file-L77 | req-gap | `file:line` | `file:line` | Unresolved | Fix suggestion |
 
 ## Resolved Findings (resolved)
 | finding_id | Resolution Evidence |
 |------------|---------------------|
 | REQ-RESOLVED-src-file-L10 | `file:line` now satisfies the requirement |
 
+## Reopened Findings (reopened)
+| # | finding_id | family_tag | Prior Resolution Evidence | Recurrence Evidence | Issue | Fix Suggestion |
+|---|------------|------------|--------------------------|---------------------|-------|----------------|
+| 1 | REQ-REOPENED-src-file-L55 | req-gap | `Previously fixed at file:line` | `Recurred at file:line` | Issue description | Fix approach |
+
 ## Rejection Gate
-- REJECT is valid only when at least one finding exists in `new` or `persists`
+- REJECT is valid only when at least one finding exists in `new`, `persists`, or `reopened`
 - Findings without `finding_id` are invalid
 ```
 

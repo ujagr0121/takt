@@ -15,13 +15,33 @@
 | Projections | ✅ | - |
 | Eventual consistency | ✅ | - |
 
-## Issues (if REJECT)
-| # | Scope | Location | Issue | Fix Suggestion |
-|---|-------|----------|-------|----------------|
-| 1 | In-scope | `src/file.ts:42` | Issue description | Fix approach |
+## Current Iteration Findings (new)
+| # | finding_id | family_tag | Scope | Location | Issue | Fix Suggestion |
+|---|------------|------------|-------|----------|-------|----------------|
+| 1 | CQRS-NEW-src-file-L42 | cqrs-violation | In-scope | `src/file.ts:42` | Issue description | Fix approach |
 
 Scope: "In-scope" (fixable in this change) / "Out-of-scope" (existing issue, non-blocking)
 
-## Existing Issues (reference, non-blocking)
-- {Record of existing issues unrelated to the current change}
+## Carry-over Findings (persists)
+| # | finding_id | family_tag | Previous Evidence | Current Evidence | Issue | Fix Suggestion |
+|---|------------|------------|-------------------|------------------|-------|----------------|
+| 1 | CQRS-PERSIST-src-file-L77 | cqrs-violation | `src/file.ts:77` | `src/file.ts:77` | Still unresolved | Apply prior fix plan |
+
+## Resolved Findings (resolved)
+| finding_id | Resolution Evidence |
+|------------|---------------------|
+| CQRS-RESOLVED-src-file-L10 | `src/file.ts:10` now satisfies the rule |
+
+## Reopened Findings (reopened)
+| # | finding_id | family_tag | Prior Resolution Evidence | Recurrence Evidence | Issue | Fix Suggestion |
+|---|------------|------------|--------------------------|---------------------|-------|----------------|
+| 1 | CQRS-REOPENED-src-file-L55 | cqrs-violation | `Previously fixed at src/file.ts:10` | `Recurred at src/file.ts:55` | Issue description | Fix approach |
+
+## Rejection Gate
+- REJECT is valid only when at least one finding exists in `new`, `persists`, or `reopened`
+- Findings without `finding_id` are invalid
 ```
+
+**Cognitive load reduction rules:**
+- APPROVE → Summary only (5 lines or fewer)
+- REJECT → Include only relevant finding rows (30 lines or fewer)

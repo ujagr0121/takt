@@ -33,6 +33,18 @@ loop_monitors:
           next: ai_review
         - condition: 非生産的（改善なし）
           next: reviewers
+  - cycle:
+      - reviewers
+      - fix
+    threshold: 3
+    judge:
+      persona: supervisor
+      instruction_template: loop-monitor-reviewers-fix
+      rules:
+        - condition: 健全（指摘数が減少、修正が反映されている）
+          next: reviewers
+        - condition: 非生産的（同じ指摘が繰り返される）
+          next: supervise
 movements:
   - name: plan
     edit: false

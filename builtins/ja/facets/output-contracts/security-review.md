@@ -14,25 +14,30 @@
 | 依存関係 | ✅ | - |
 
 ## 今回の指摘（new）
-| # | finding_id | 重大度 | 種類 | 場所 | 問題 | 修正案 |
-|---|------------|--------|------|------|------|--------|
-| 1 | SEC-NEW-src-db-L42 | High | SQLi | `src/db.ts:42` | 生SQL文字列 | パラメータ化クエリを使用 |
+| # | finding_id | family_tag | 重大度 | 種類 | 場所 | 問題 | 修正案 |
+|---|------------|------------|--------|------|------|------|--------|
+| 1 | SEC-NEW-src-db-L42 | injection-risk | High | SQLi | `src/db.ts:42` | 生SQL文字列 | パラメータ化クエリを使用 |
 
 ## 継続指摘（persists）
-| # | finding_id | 前回根拠 | 今回根拠 | 問題 | 修正案 |
-|---|------------|----------|----------|------|--------|
-| 1 | SEC-PERSIST-src-auth-L18 | `src/auth.ts:18` | `src/auth.ts:18` | 未解消 | バリデーションを強化 |
+| # | finding_id | family_tag | 前回根拠 | 今回根拠 | 問題 | 修正案 |
+|---|------------|------------|----------|----------|------|--------|
+| 1 | SEC-PERSIST-src-auth-L18 | injection-risk | `src/auth.ts:18` | `src/auth.ts:18` | 未解消 | バリデーションを強化 |
 
 ## 解消済み（resolved）
 | finding_id | 解消根拠 |
 |------------|----------|
 | SEC-RESOLVED-src-db-L10 | `src/db.ts:10` はバインド変数化済み |
 
+## 再開指摘（reopened）
+| # | finding_id | family_tag | 解消根拠（前回） | 再発根拠 | 問題 | 修正案 |
+|---|------------|------------|----------------|---------|------|--------|
+| 1 | SEC-REOPENED-src-auth-L55 | injection-risk | `前回: src/auth.ts:20 で修正済み` | `src/auth.ts:55 で再発` | 問題の説明 | 修正方法 |
+
 ## 警告（非ブロッキング）
 - {セキュリティに関する推奨事項}
 
 ## REJECT判定条件
-- `new` または `persists` が1件以上ある場合のみ REJECT 可
+- `new`、`persists`、または `reopened` が1件以上ある場合のみ REJECT 可
 - `finding_id` なしの指摘は無効
 ```
 

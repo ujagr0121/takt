@@ -17,22 +17,27 @@
 | テスト戦略（ユニット/統合/E2E） | ✅ | - |
 
 ## 今回の指摘（new）
-| # | finding_id | カテゴリ | 場所 | 問題 | 修正案 |
-|---|------------|---------|------|------|--------|
-| 1 | TEST-NEW-src-test-L42 | カバレッジ | `src/test.ts:42` | 問題の説明 | 修正方法 |
+| # | finding_id | family_tag | カテゴリ | 場所 | 問題 | 修正案 |
+|---|------------|------------|---------|------|------|--------|
+| 1 | TEST-NEW-src-test-L42 | test-structure | カバレッジ | `src/test.ts:42` | 問題の説明 | 修正方法 |
 
 ## 継続指摘（persists）
-| # | finding_id | 前回根拠 | 今回根拠 | 問題 | 修正案 |
-|---|------------|----------|----------|------|--------|
-| 1 | TEST-PERSIST-src-test-L77 | `src/test.ts:77` | `src/test.ts:77` | 未解消 | 修正方法 |
+| # | finding_id | family_tag | 前回根拠 | 今回根拠 | 問題 | 修正案 |
+|---|------------|------------|----------|----------|------|--------|
+| 1 | TEST-PERSIST-src-test-L77 | test-structure | `src/test.ts:77` | `src/test.ts:77` | 未解消 | 修正方法 |
 
 ## 解消済み（resolved）
 | finding_id | 解消根拠 |
 |------------|----------|
 | TEST-RESOLVED-src-test-L10 | `src/test.ts:10` でカバレッジ充足 |
 
+## 再開指摘（reopened）
+| # | finding_id | family_tag | 解消根拠（前回） | 再発根拠 | 問題 | 修正案 |
+|---|------------|------------|----------------|---------|------|--------|
+| 1 | TEST-REOPENED-src-test-L55 | test-structure | `前回: src/test.ts:10 で修正済み` | `src/test.ts:55 で再発` | 問題の説明 | 修正方法 |
+
 ## REJECT判定条件
-- `new` または `persists` が1件以上ある場合のみ REJECT 可
+- `new`、`persists`、または `reopened` が1件以上ある場合のみ REJECT 可
 - `finding_id` なしの指摘は無効
 ```
 

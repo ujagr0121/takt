@@ -6,7 +6,7 @@
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, parse, resolve, sep } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import type { PieceMovement, Language, AgentResponse } from '../models/types.js';
 import type { PhaseName } from './types.js';
 import type { RunAgentOptions } from '../../agents/runner.js';
@@ -67,10 +67,9 @@ function formatHistoryTimestamp(date: Date): string {
   return `${year}${month}${day}T${hour}${minute}${second}Z`;
 }
 
-function buildHistoryFileName(fileName: string, timestamp: string, sequence: number): string {
-  const parsed = parse(fileName);
+function buildVersionedFileName(fileName: string, timestamp: string, sequence: number): string {
   const duplicateSuffix = sequence === 0 ? '' : `.${sequence}`;
-  return `${parsed.name}.${timestamp}${duplicateSuffix}${parsed.ext}`;
+  return `${fileName}.${timestamp}${duplicateSuffix}`;
 }
 
 function backupExistingReport(reportDir: string, fileName: string, targetPath: string): void {
@@ -79,18 +78,15 @@ function backupExistingReport(reportDir: string, fileName: string, targetPath: s
   }
 
   const currentContent = readFileSync(targetPath, 'utf-8');
-  const historyDir = resolve(reportDir, '..', 'logs', 'reports-history');
-  mkdirSync(historyDir, { recursive: true });
-
   const timestamp = formatHistoryTimestamp(new Date());
   let sequence = 0;
-  let historyPath = resolve(historyDir, buildHistoryFileName(fileName, timestamp, sequence));
-  while (existsSync(historyPath)) {
+  let versionedPath = resolve(reportDir, buildVersionedFileName(fileName, timestamp, sequence));
+  while (existsSync(versionedPath)) {
     sequence += 1;
-    historyPath = resolve(historyDir, buildHistoryFileName(fileName, timestamp, sequence));
+    versionedPath = resolve(reportDir, buildVersionedFileName(fileName, timestamp, sequence));
   }
 
-  writeFileSync(historyPath, currentContent);
+  writeFileSync(versionedPath, currentContent);
 }
 
 function writeReportFile(reportDir: string, fileName: string, content: string): void {

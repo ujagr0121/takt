@@ -20,22 +20,27 @@
 | 1 | {要求にない変更} | `src/file.ts` | 妥当/不要 |
 
 ## 今回の指摘（new）
-| # | finding_id | カテゴリ | 場所 | 問題 | 修正案 |
-|---|------------|---------|------|------|--------|
-| 1 | REQ-NEW-src-file-L42 | 未実装 | `src/file.ts:42` | 問題の説明 | 修正方法 |
+| # | finding_id | family_tag | カテゴリ | 場所 | 問題 | 修正案 |
+|---|------------|------------|---------|------|------|--------|
+| 1 | REQ-NEW-src-file-L42 | req-gap | 未実装 | `src/file.ts:42` | 問題の説明 | 修正方法 |
 
 ## 継続指摘（persists）
-| # | finding_id | 前回根拠 | 今回根拠 | 問題 | 修正案 |
-|---|------------|----------|----------|------|--------|
-| 1 | REQ-PERSIST-src-file-L77 | `file:line` | `file:line` | 未解消 | 修正方法 |
+| # | finding_id | family_tag | 前回根拠 | 今回根拠 | 問題 | 修正案 |
+|---|------------|------------|----------|----------|------|--------|
+| 1 | REQ-PERSIST-src-file-L77 | req-gap | `file:line` | `file:line` | 未解消 | 修正方法 |
 
 ## 解消済み（resolved）
 | finding_id | 解消根拠 |
 |------------|----------|
 | REQ-RESOLVED-src-file-L10 | `file:line` は要件を充足 |
 
+## 再開指摘（reopened）
+| # | finding_id | family_tag | 解消根拠（前回） | 再発根拠 | 問題 | 修正案 |
+|---|------------|------------|----------------|---------|------|--------|
+| 1 | REQ-REOPENED-src-file-L55 | req-gap | `前回: file:line で修正済み` | `file:line で再発` | 問題の説明 | 修正方法 |
+
 ## REJECT判定条件
-- `new` または `persists` が1件以上ある場合のみ REJECT 可
+- `new`、`persists`、または `reopened` が1件以上ある場合のみ REJECT 可
 - `finding_id` なしの指摘は無効
 ```
 
