@@ -885,9 +885,11 @@ movements:
 
 describe('Piece Loader IT: piece Arpeggio policy', () => {
   let testDir: string;
+  const loadGlobalConfigMock = vi.mocked(loadGlobalConfig);
 
   beforeEach(() => {
     testDir = createTestDir();
+    loadGlobalConfigMock.mockReturnValue({});
   });
 
   afterEach(() => {
@@ -947,6 +949,41 @@ movements:
 `);
 
     const config = loadPiece('arpeggio-custom', testDir);
+
+    expect(config).not.toBeNull();
+    expect(config!.movements[0]?.arpeggio?.source).toBe('custom-source');
+    expect(config!.movements[0]?.arpeggio?.merge.inlineJs).toContain('join');
+  });
+
+  it('preserves globally allowed Arpeggio capabilities when project config enables another one', () => {
+    const piecesDir = join(testDir, '.takt', 'pieces');
+    mkdirSync(piecesDir, { recursive: true });
+    loadGlobalConfigMock.mockReturnValue({
+      pieceArpeggio: { customDataSourceModules: true },
+    });
+    writeFileSync(
+      join(testDir, '.takt', 'config.yaml'),
+      ['piece_arpeggio:', '  custom_merge_inline_js: true'].join('\n'),
+      'utf-8',
+    );
+    writeFileSync(join(testDir, 'rows.csv'), 'value\nhello\n');
+    writeFileSync(join(testDir, 'prompt.md'), 'Summarize {{rows}}');
+
+    writeFileSync(join(piecesDir, 'arpeggio-precedence.yaml'), `
+name: arpeggio-precedence
+movements:
+  - name: summarize
+    instruction: "unused"
+    arpeggio:
+      source: custom-source
+      source_path: ../../rows.csv
+      template: ../../prompt.md
+      merge:
+        strategy: custom
+        inline_js: 'return results.map(r => r.content).join(\"\\n\");'
+`);
+
+    const config = loadPiece('arpeggio-precedence', testDir);
 
     expect(config).not.toBeNull();
     expect(config!.movements[0]?.arpeggio?.source).toBe('custom-source');

@@ -484,10 +484,7 @@ export function loadPieceFromFile(filePath: string, projectDir: string): PieceCo
     globalConfig.pieceRuntimePrepare,
     projectConfig.pieceRuntimePrepare,
   );
-  const pieceArpeggioPolicy = {
-    ...globalConfig.pieceArpeggio,
-    ...projectConfig.pieceArpeggio,
-  };
+  const pieceArpeggioPolicy = resolvePieceArpeggioPolicy(globalConfig.pieceArpeggio, projectConfig.pieceArpeggio);
 
   return normalizePieceConfig(
     raw,
@@ -531,6 +528,35 @@ function validatePieceRuntimePrepare(
       + 'Configure piece_runtime_prepare.custom_scripts in project/global config to allow it.'
     );
   }
+}
+
+function resolvePieceArpeggioPolicy(
+  globalPolicy: PieceArpeggioConfig | undefined,
+  projectPolicy: PieceArpeggioConfig | undefined,
+): PieceArpeggioConfig | undefined {
+  const policy: PieceArpeggioConfig = {};
+
+  if (globalPolicy?.customDataSourceModules !== undefined) {
+    policy.customDataSourceModules = globalPolicy.customDataSourceModules;
+  }
+  if (globalPolicy?.customMergeInlineJs !== undefined) {
+    policy.customMergeInlineJs = globalPolicy.customMergeInlineJs;
+  }
+  if (globalPolicy?.customMergeFiles !== undefined) {
+    policy.customMergeFiles = globalPolicy.customMergeFiles;
+  }
+
+  if (projectPolicy?.customDataSourceModules !== undefined) {
+    policy.customDataSourceModules = projectPolicy.customDataSourceModules;
+  }
+  if (projectPolicy?.customMergeInlineJs !== undefined) {
+    policy.customMergeInlineJs = projectPolicy.customMergeInlineJs;
+  }
+  if (projectPolicy?.customMergeFiles !== undefined) {
+    policy.customMergeFiles = projectPolicy.customMergeFiles;
+  }
+
+  return Object.keys(policy).length > 0 ? policy : undefined;
 }
 
 function validatePieceArpeggio(
