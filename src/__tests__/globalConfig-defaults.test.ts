@@ -885,6 +885,45 @@ describe('loadGlobalConfig', () => {
     });
   });
 
+  describe('piece_arpeggio global config', () => {
+    it('should load piece_arpeggio from config.yaml', () => {
+      const taktDir = join(testHomeDir, '.takt');
+      mkdirSync(taktDir, { recursive: true });
+      writeFileSync(
+        getGlobalConfigPath(),
+        [
+          'language: en',
+          'piece_arpeggio:',
+          '  custom_data_source_modules: true',
+          '  custom_merge_inline_js: false',
+          '  custom_merge_files: true',
+        ].join('\n'),
+        'utf-8',
+      );
+
+      const config = loadGlobalConfig();
+      expect(config.pieceArpeggio).toEqual({
+        customDataSourceModules: true,
+        customMergeInlineJs: false,
+        customMergeFiles: true,
+      });
+    });
+
+    it('should save and reload piece_arpeggio', () => {
+      const taktDir = join(testHomeDir, '.takt');
+      mkdirSync(taktDir, { recursive: true });
+      writeFileSync(getGlobalConfigPath(), 'language: en\n', 'utf-8');
+
+      const config = loadGlobalConfig();
+      config.pieceArpeggio = { customDataSourceModules: true, customMergeInlineJs: true };
+      saveGlobalConfig(config);
+      invalidateGlobalConfigCache();
+
+      const reloaded = loadGlobalConfig();
+      expect(reloaded.pieceArpeggio).toEqual({ customDataSourceModules: true, customMergeInlineJs: true });
+    });
+  });
+
   describe('sync_conflict_resolver global config', () => {
     it('should load sync_conflict_resolver from config.yaml', () => {
       const taktDir = join(testHomeDir, '.takt');

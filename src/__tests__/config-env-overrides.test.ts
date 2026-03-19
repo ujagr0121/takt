@@ -99,6 +99,51 @@ describe('config env overrides', () => {
     });
   });
 
+  it('should apply TAKT_PIECE_ARPEGGIO JSON override for global config', () => {
+    process.env.TAKT_PIECE_ARPEGGIO = '{"custom_data_source_modules":true,"custom_merge_inline_js":false}';
+
+    const raw: Record<string, unknown> = {};
+    applyGlobalConfigEnvOverrides(raw);
+
+    expect(raw.piece_arpeggio).toEqual({
+      custom_data_source_modules: true,
+      custom_merge_inline_js: false,
+    });
+  });
+
+  it('should apply TAKT_PIECE_ARPEGGIO_CUSTOM_MERGE_INLINE_JS override for global config', () => {
+    process.env.TAKT_PIECE_ARPEGGIO_CUSTOM_MERGE_INLINE_JS = 'true';
+
+    const raw: Record<string, unknown> = {};
+    applyGlobalConfigEnvOverrides(raw);
+
+    expect(raw.piece_arpeggio).toEqual({
+      custom_merge_inline_js: true,
+    });
+  });
+
+  it('should apply TAKT_PIECE_ARPEGGIO JSON override for project config', () => {
+    process.env.TAKT_PIECE_ARPEGGIO = '{"custom_merge_files":true}';
+
+    const raw: Record<string, unknown> = {};
+    applyProjectConfigEnvOverrides(raw);
+
+    expect(raw.piece_arpeggio).toEqual({
+      custom_merge_files: true,
+    });
+  });
+
+  it('should apply TAKT_PIECE_ARPEGGIO_CUSTOM_DATA_SOURCE_MODULES override for project config', () => {
+    process.env.TAKT_PIECE_ARPEGGIO_CUSTOM_DATA_SOURCE_MODULES = 'false';
+
+    const raw: Record<string, unknown> = {};
+    applyProjectConfigEnvOverrides(raw);
+
+    expect(raw.piece_arpeggio).toEqual({
+      custom_data_source_modules: false,
+    });
+  });
+
   it('should apply analytics env overrides for global config', () => {
     process.env.TAKT_ANALYTICS_ENABLED = 'true';
     process.env.TAKT_ANALYTICS_EVENTS_PATH = '/tmp/global-analytics';
