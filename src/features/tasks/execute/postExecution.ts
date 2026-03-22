@@ -6,7 +6,7 @@
  */
 
 import { autoCommitAndPush } from '../../../infra/task/index.js';
-import { pushHeadToOriginBranch } from '../../../infra/task/git.js';
+import { pushBranch } from '../../../infra/task/git.js';
 import { info, error, success } from '../../../shared/ui/index.js';
 import { createLogger } from '../../../shared/utils/index.js';
 import { buildPrBody, createPullRequestSafely, getGitProvider } from '../../../infra/git/index.js';
@@ -69,10 +69,10 @@ export async function postExecutionFlow(options: PostExecutionOptions): Promise<
 
   if (commitResult.commitHash && branch && shouldCreatePr) {
     try {
-      pushHeadToOriginBranch(execCwd, branch);
+      pushBranch(projectCwd, branch);
     } catch (pushError) {
       void pushError;
-      log.error('Branch push from execution cwd failed', {
+      log.error('Branch push to origin failed', {
         branch,
         outcome: BRANCH_PUSH_FAILURE_MESSAGE,
       });

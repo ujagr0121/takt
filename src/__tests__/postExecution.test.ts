@@ -6,10 +6,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockAutoCommitAndPush, mockPushHeadToOriginBranch, mockFindExistingPr, mockCommentOnPr, mockCreatePullRequest, mockBuildPrBody, mockCreatePullRequestSafely } =
+const { mockAutoCommitAndPush, mockPushBranch, mockFindExistingPr, mockCommentOnPr, mockCreatePullRequest, mockBuildPrBody, mockCreatePullRequestSafely } =
   vi.hoisted(() => ({
     mockAutoCommitAndPush: vi.fn(),
-    mockPushHeadToOriginBranch: vi.fn(),
+    mockPushBranch: vi.fn(),
     mockFindExistingPr: vi.fn(),
     mockCommentOnPr: vi.fn(),
     mockCreatePullRequest: vi.fn(),
@@ -22,7 +22,7 @@ vi.mock('../infra/task/index.js', () => ({
 }));
 
 vi.mock('../infra/task/git.js', () => ({
-  pushHeadToOriginBranch: (...args: unknown[]) => mockPushHeadToOriginBranch(...args),
+  pushBranch: (...args: unknown[]) => mockPushBranch(...args),
 }));
 
 vi.mock('../infra/git/index.js', () => ({
@@ -67,7 +67,7 @@ describe('postExecutionFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockAutoCommitAndPush.mockReturnValue({ success: true, commitHash: 'abc123' });
-    mockPushHeadToOriginBranch.mockReturnValue(undefined);
+    mockPushBranch.mockReturnValue(undefined);
     mockCommentOnPr.mockReturnValue({ success: true });
     mockCreatePullRequest.mockReturnValue({ success: true, url: 'https://github.com/org/repo/pull/1' });
     mockCreatePullRequestSafely.mockImplementation((provider, cwd, options) => {
@@ -171,7 +171,7 @@ describe('postExecutionFlow', () => {
     const result = await postExecutionFlow(baseOptions);
 
     // Then: the workflow should continue into the existing pr_failed path.
-    expect(mockPushHeadToOriginBranch).toHaveBeenCalledWith('/clone', 'task/fix-the-bug');
+    expect(mockPushBranch).toHaveBeenCalledWith('/project', 'task/fix-the-bug');
     expect(mockCreatePullRequest).toHaveBeenCalledWith(
       '/project',
       expect.objectContaining({
@@ -186,13 +186,13 @@ describe('postExecutionFlow', () => {
   });
 
   it('origin への push 失敗時は PR 処理へ進まず prFailed: true を返す', async () => {
-    mockPushHeadToOriginBranch.mockImplementation(() => {
+    mockPushBranch.mockImplementation(() => {
       throw new Error('fatal: could not read Password for https://example.com/repo.git');
     });
 
     const result = await postExecutionFlow(baseOptions);
 
-    expect(mockPushHeadToOriginBranch).toHaveBeenCalledWith('/clone', 'task/fix-the-bug');
+    expect(mockPushBranch).toHaveBeenCalledWith('/project', 'task/fix-the-bug');
     expect(mockFindExistingPr).not.toHaveBeenCalled();
     expect(mockCreatePullRequest).not.toHaveBeenCalled();
     expect(result.prFailed).toBe(true);
@@ -207,7 +207,7 @@ describe('postExecutionFlow', () => {
 
     const result = await postExecutionFlow(baseOptions);
 
-    expect(mockPushHeadToOriginBranch).not.toHaveBeenCalled();
+    expect(mockPushBranch).not.toHaveBeenCalled();
     expect(mockFindExistingPr).not.toHaveBeenCalled();
     expect(mockCreatePullRequest).not.toHaveBeenCalled();
     expect(result.prFailed).toBeUndefined();
@@ -224,7 +224,7 @@ describe('postExecutionFlow', () => {
 
     const result = await postExecutionFlow({ ...baseOptions, shouldCreatePr: false });
 
-    expect(mockPushHeadToOriginBranch).not.toHaveBeenCalled();
+    expect(mockPushBranch).not.toHaveBeenCalled();
     expect(mockFindExistingPr).not.toHaveBeenCalled();
     expect(mockCreatePullRequest).not.toHaveBeenCalled();
     expect(result.prFailed).toBeUndefined();
@@ -243,7 +243,7 @@ describe('postExecutionFlow', () => {
 
     const result = await postExecutionFlow({ ...baseOptions, shouldCreatePr: false });
 
-    expect(mockPushHeadToOriginBranch).not.toHaveBeenCalled();
+    expect(mockPushBranch).not.toHaveBeenCalled();
     expect(mockFindExistingPr).not.toHaveBeenCalled();
     expect(mockCreatePullRequest).not.toHaveBeenCalled();
     expect(result.prFailed).toBeUndefined();
