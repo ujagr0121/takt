@@ -20,7 +20,7 @@ describe('createPartMovement', () => {
         persona: 'leader',
         maxParts: 3,
         refillThreshold: 0,
-        timeoutMs: 600000,
+        timeoutMs: 900000,
       },
     };
     const part: PartDefinition = {

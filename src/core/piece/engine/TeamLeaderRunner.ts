@@ -262,7 +262,7 @@ export class TeamLeaderRunner {
   ): Promise<PartResult> {
     const partMovement = createPartMovement(step, part);
     const baseOptions = this.deps.optionsBuilder.buildAgentOptions(partMovement);
-    const timeoutMs = part.timeoutMs ?? defaultTimeoutMs;
+    const timeoutMs = defaultTimeoutMs;
     const { signal, dispose } = buildAbortSignal(timeoutMs, baseOptions.abortSignal);
     const options = parallelLogger
       ? { ...baseOptions, abortSignal: signal, onStream: parallelLogger.createStreamHandler(part.id, partIndex) }

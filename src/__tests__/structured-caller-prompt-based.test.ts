@@ -53,7 +53,7 @@ describe('PromptBasedStructuredCaller', () => {
         '```json',
         JSON.stringify([
           { id: 'p1', title: 'First task', instruction: 'Do the first thing' },
-          { id: 'p2', title: 'Second task', instruction: 'Do the second thing', timeout_ms: 120000 },
+          { id: 'p2', title: 'Second task', instruction: 'Do the second thing' },
         ]),
         '```',
       ].join('\n'),
@@ -70,8 +70,8 @@ describe('PromptBasedStructuredCaller', () => {
     });
 
     expect(result).toEqual([
-      { id: 'p1', title: 'First task', instruction: 'Do the first thing', timeoutMs: undefined },
-      { id: 'p2', title: 'Second task', instruction: 'Do the second thing', timeoutMs: 120000 },
+      { id: 'p1', title: 'First task', instruction: 'Do the first thing' },
+      { id: 'p2', title: 'Second task', instruction: 'Do the second thing' },
     ]);
     expect(mockRunAgent).toHaveBeenCalledWith(
       'team-leader',
@@ -119,7 +119,7 @@ describe('PromptBasedStructuredCaller', () => {
       done: false,
       reasoning: 'Need one more pass',
       parts: [
-        { id: 'p2', title: 'Follow up', instruction: 'Handle remaining gap', timeoutMs: undefined },
+        { id: 'p2', title: 'Follow up', instruction: 'Handle remaining gap' },
       ],
     });
     expect(mockRunAgent).toHaveBeenCalledWith(

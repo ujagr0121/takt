@@ -150,14 +150,14 @@ export function buildPromptBasedDecomposePrompt(
         '出力形式:',
         '- ```json ... ``` ブロックのみを返す',
         '- JSON は配列にする',
-        '- 各要素は {"id","title","instruction","timeout_ms?"} を持つ',
+        '- 各要素は {"id","title","instruction"} を持つ',
       ]
     : [
         '',
         'Output format:',
         '- Return only one ```json ... ``` block',
         '- The JSON must be an array',
-        '- Each item must include {"id","title","instruction","timeout_ms?"}',
+        '- Each item must include {"id","title","instruction"}',
       ];
 
   return `${buildDecomposeBasePrompt(instruction, maxParts, language)}\n${outputInstruction.join('\n')}`;

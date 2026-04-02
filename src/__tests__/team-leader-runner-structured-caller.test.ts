@@ -33,7 +33,7 @@ describe('TeamLeaderRunner with structuredCaller', () => {
           userInstruction: 'leader instruction',
         });
         return [
-          { id: 'part-1', title: 'API', instruction: 'Implement API', timeoutMs: undefined },
+          { id: 'part-1', title: 'API', instruction: 'Implement API' },
         ];
       }),
       requestMoreParts: vi.fn().mockResolvedValue({

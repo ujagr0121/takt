@@ -336,14 +336,14 @@ describe('agent-usecases', () => {
   it('decomposeTask は構造化出力 parts を返す', async () => {
     vi.mocked(runAgent).mockResolvedValue(doneResponse('x', {
       parts: [
-        { id: 'p1', title: 'Part 1', instruction: 'Do 1', timeout_ms: 1000 },
+        { id: 'p1', title: 'Part 1', instruction: 'Do 1' },
       ],
     }));
 
     const result = await decomposeTask('instruction', 3, { cwd: '/repo', persona: 'team-leader' });
 
     expect(result).toEqual([
-      { id: 'p1', title: 'Part 1', instruction: 'Do 1', timeoutMs: 1000 },
+      { id: 'p1', title: 'Part 1', instruction: 'Do 1' },
     ]);
     expect(parseParts).not.toHaveBeenCalled();
     expect(runAgent).toHaveBeenCalledWith('team-leader', expect.any(String), expect.objectContaining({
@@ -357,14 +357,14 @@ describe('agent-usecases', () => {
   it('decomposeTask は構造化出力がない場合 parseParts にフォールバックする', async () => {
     vi.mocked(runAgent).mockResolvedValue(doneResponse('```json [] ```'));
     vi.mocked(parseParts).mockReturnValue([
-      { id: 'p1', title: 'Part 1', instruction: 'fallback', timeoutMs: undefined },
+      { id: 'p1', title: 'Part 1', instruction: 'fallback' },
     ]);
 
     const result = await decomposeTask('instruction', 2, { cwd: '/repo' });
 
     expect(parseParts).toHaveBeenCalledWith('```json [] ```', 2);
     expect(result).toEqual([
-      { id: 'p1', title: 'Part 1', instruction: 'fallback', timeoutMs: undefined },
+      { id: 'p1', title: 'Part 1', instruction: 'fallback' },
     ]);
   });
 
@@ -384,7 +384,7 @@ describe('agent-usecases', () => {
   it('decomposeTask は onPromptResolved を runAgent に伝搬する', async () => {
     vi.mocked(runAgent).mockResolvedValue(doneResponse('x', {
       parts: [
-        { id: 'p1', title: 'Part 1', instruction: 'Do 1', timeout_ms: null },
+        { id: 'p1', title: 'Part 1', instruction: 'Do 1' },
       ],
     }));
     const onPromptResolved = vi.fn();
@@ -407,7 +407,7 @@ describe('agent-usecases', () => {
       done: false,
       reasoning: 'Need one more part',
       parts: [
-        { id: 'p3', title: 'Part 3', instruction: 'Do 3', timeout_ms: null },
+        { id: 'p3', title: 'Part 3', instruction: 'Do 3' },
       ],
     }));
 
@@ -422,7 +422,7 @@ describe('agent-usecases', () => {
     expect(result).toEqual({
       done: false,
       reasoning: 'Need one more part',
-      parts: [{ id: 'p3', title: 'Part 3', instruction: 'Do 3', timeoutMs: undefined }],
+      parts: [{ id: 'p3', title: 'Part 3', instruction: 'Do 3' }],
     });
     expect(runAgent).toHaveBeenCalledWith('team-leader', expect.stringContaining('original instruction'), expect.objectContaining({
       allowedTools: [],

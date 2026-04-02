@@ -279,7 +279,7 @@ export const TeamLeaderConfigRawSchema = z.object({
   /** Trigger additional planning when queue size is this value or below */
   refill_threshold: z.number().int().min(0).optional().default(0),
   /** Default timeout per part in milliseconds */
-  timeout_ms: z.number().int().positive().optional().default(600000),
+  timeout_ms: z.number().int().positive().optional().default(900000),
   /** Persona reference for part agents */
   part_persona: z.string().optional(),
   /** Allowed tools for part agents */
