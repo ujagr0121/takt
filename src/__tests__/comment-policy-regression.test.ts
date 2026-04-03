@@ -26,6 +26,20 @@ describe('test comment policy regression', () => {
     }
   });
 
+  it('should not reintroduce removed judge-provider explanatory comments (#556 policy)', () => {
+    const banned: readonly { path: string; needle: string }[] = [
+      { path: '../agents/judge-status-usecase.ts', needle: 'Same as Phase 1' },
+      { path: '../core/piece/evaluation/RuleEvaluator.ts', needle: 'Phase-1-aligned' },
+      { path: '../core/piece/engine/OptionsBuilder.ts', needle: 'same logic as buildBaseOptions' },
+      { path: '../core/piece/phase-runner.ts', needle: 'Same provider/model resolution as Phase 1' },
+      { path: 'judge-runagent-provider-resolution.test.ts', needle: '実装完了まで失敗' },
+    ];
+    for (const { path, needle } of banned) {
+      const content = readFileSync(new URL(path, import.meta.url), 'utf-8');
+      expect(content).not.toContain(needle);
+    }
+  });
+
   it('should not contain Given/When/Then line comments in Issue #562 task tests (policy-comment)', () => {
     for (const file of ISSUE_562_TASK_TEST_FILES) {
       const lines = readFileSync(new URL(file, import.meta.url), 'utf-8').split('\n');
