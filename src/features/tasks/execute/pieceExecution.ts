@@ -56,11 +56,15 @@ export async function executePiece(
   const runMetaManager = new RunMetaManager(runPaths, task, pieceConfig.name);
   let sessionLog = createSessionLog(task, projectCwd, pieceConfig.name);
   const displayRef: { current: StreamDisplay | null } = { current: null };
+  const handlerRef: { current: ReturnType<StreamDisplay['createHandler']> | null } = { current: null };
   const streamHandler = prefixWriter
     ? createPrefixedStreamHandler(prefixWriter)
     : (event: Parameters<ReturnType<StreamDisplay['createHandler']>>[0]): void => {
         if (!displayRef.current || event.type === 'result') return;
-        displayRef.current.createHandler()(event);
+        if (!handlerRef.current) {
+          handlerRef.current = displayRef.current.createHandler();
+        }
+        handlerRef.current(event);
       };
   const isWorktree = cwd !== projectCwd;
   const globalConfig = resolvePieceConfigValues(projectCwd, ['notificationSound', 'notificationSoundEvents', 'provider', 'runtime', 'preventSleep', 'model', 'logging', 'analytics']);
@@ -212,6 +216,7 @@ export async function executePiece(
       if (!prefixWriter) {
         const movementIndex = pieceConfig.movements.findIndex((m) => m.name === step.name);
         displayRef.current = new StreamDisplay(safePersonaDisplayName, isQuietMode(), { iteration, maxMovements: effectivePieceConfig.maxMovements, movementIndex: movementIndex >= 0 ? movementIndex : 0, totalMovements: pieceConfig.movements.length });
+        handlerRef.current = null;
       }
       sessionLogger.onMovementStart(step, iteration, instruction);
     });
