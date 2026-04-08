@@ -15,6 +15,7 @@ import {
 import { getGitProvider, type Issue } from '../../../infra/git/index.js';
 import { withProgress } from '../../../shared/ui/index.js';
 import { createLogger, getErrorMessage, isPathInside } from '../../../shared/utils/index.js';
+import { generateReportDir } from '../../../shared/utils/reportDir.js';
 import { getTaskSlugFromTaskDir } from '../../../shared/utils/taskPaths.js';
 
 const log = createLogger('task');
@@ -42,8 +43,8 @@ export interface ResolvedTaskExecution {
   execCwd: string;
   execPiece: string;
   isWorktree: boolean;
+  reportDirName: string;
   taskPrompt?: string;
-  reportDirName?: string;
   branch?: string;
   worktreePath?: string;
   baseBranch?: string;
@@ -183,6 +184,8 @@ export async function resolveTaskExecution(
     taskPrompt = stageTaskSpecForExecution(defaultCwd, execCwd, task.taskDir, reportDirName);
   }
 
+  const resolvedReportDirName = reportDirName ?? generateReportDir(taskPrompt ?? task.content);
+
   const startMovement = resolveTaskStartMovementValue(normalizedData);
   const retryNote = data.retry_note;
   const maxMovementsOverride = data.exceeded_max_steps;
@@ -197,11 +200,11 @@ export async function resolveTaskExecution(
     execCwd,
     execPiece,
     isWorktree,
+    reportDirName: resolvedReportDirName,
     autoPr,
     draftPr,
     shouldPublishBranchToOrigin,
     ...(taskPrompt ? { taskPrompt } : {}),
-    ...(reportDirName ? { reportDirName } : {}),
     ...(branch ? { branch } : {}),
     ...(worktreePath ? { worktreePath } : {}),
     ...(baseBranch ? { baseBranch } : {}),

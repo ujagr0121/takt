@@ -6,21 +6,8 @@
  */
 
 import { writeFileAtomic, ensureDir } from '../../../infra/config/index.js';
+import type { RunMeta } from '../../../core/piece/run/run-meta.js';
 import type { RunPaths } from '../../../core/piece/run/run-paths.js';
-
-interface RunMeta {
-  task: string;
-  piece: string;
-  runSlug: string;
-  runRoot: string;
-  reportDirectory: string;
-  contextDirectory: string;
-  logsDirectory: string;
-  status: 'running' | 'completed' | 'aborted';
-  startTime: string;
-  endTime?: string;
-  iterations?: number;
-}
 
 export class RunMetaManager {
   private readonly runMeta: RunMeta;
@@ -41,6 +28,12 @@ export class RunMetaManager {
       startTime: new Date().toISOString(),
     };
     ensureDir(runPaths.runRootAbs);
+    writeFileAtomic(this.metaAbs, JSON.stringify(this.runMeta, null, 2));
+  }
+
+  updateStep(stepName: string, iteration: number): void {
+    this.runMeta.currentStep = stepName;
+    this.runMeta.currentIteration = iteration;
     writeFileAtomic(this.metaAbs, JSON.stringify(this.runMeta, null, 2));
   }
 

@@ -197,6 +197,7 @@ export async function executePiece(
     engine.on('movement:start', (step, iteration, instruction, providerInfo) => {
       log.debug('Movement starting', { step: step.name, persona: step.personaDisplayName, iteration });
       currentIteration = iteration;
+      runMetaManager.updateStep(step.name, iteration);
       const movementIteration = (movementIterations.get(step.name) ?? 0) + 1;
       movementIterations.set(step.name, movementIteration);
       const safeMovementName = sanitizeTerminalText(step.name);
