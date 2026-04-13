@@ -5,16 +5,20 @@ initial_step: plan
 
 loop_monitors:
   - cycle: [supervise, review]
-    threshold: 4
+    threshold: 3
     judge:
       persona: supervisor
       instruction: |
         The supervise → review cycle for the frontend architecture audit has repeated {cycle_count} times.
-        Judge the overall completeness and quality of the audit, and decide whether the current results are acceptable.
+        Compare the audit report against the plan report and judge:
+        - Whether the audit scope has expanded since the previous cycle (new modules audited)
+        - Whether remaining unaudited modules can be completed in a reasonable number of cycles
       rules:
-        - condition: Quality is sufficient
+        - condition: Audit quality and scope are sufficient
           next: COMPLETE
-        - condition: Quality is insufficient with no prospect of improvement
+        - condition: Scope is expanding and progress continues
+          next: review
+        - condition: Scope is stalled with no prospect of improvement
           next: ABORT
 
 steps:
@@ -82,6 +86,10 @@ steps:
       - architecture
     instruction: architecture-audit-review
     edit: false
+    output_contracts:
+      report:
+        - name: 02-architecture-audit.md
+          format: architecture-audit
     rules:
       - condition: Re-audit complete
         next: supervise

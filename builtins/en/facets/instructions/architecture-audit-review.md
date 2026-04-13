@@ -5,9 +5,14 @@ Re-audit the modules or boundaries that were judged insufficient in the previous
 - Audit report: {report:02-architecture-audit.md}
 
 **What to do:**
-1. Read the flagged modules, boundaries, and call chains in full
-2. Re-check the structural claims and identify what was previously skipped or weakly evidenced
-3. Update the audit result with concrete file evidence, explicit scope coverage, and missing-item reasons where applicable
+1. Cross-check the audit report against the plan report to identify unaudited modules and missing boundaries
+2. Read the unaudited or flagged modules, boundaries, and call chains in full
+3. Record findings with concrete file evidence, explicit scope coverage, and missing-item reasons where applicable
+
+**Output principles:**
+- Preserve all existing Findings and Audit Scope from the previous audit report, and integrate new results into a complete updated version
+- Add newly audited modules to the Audit Scope table
+- If unaudited modules remain, state the reason explicitly in Follow-up Notes
 
 **Strictly prohibited:**
 - Modifying production code

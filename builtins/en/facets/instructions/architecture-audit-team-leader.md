@@ -4,8 +4,10 @@ Decompose the architecture audit, assign modules to each part, and execute in pa
 
 **What to do:**
 1. Review the module inventory and architectural risk areas from the plan report
-2. Split the audit into 3 groups by module or boundary
+2. Split ALL target modules and subprojects from the plan report into 3 groups with no gaps
 3. Assign exclusive ownership to each part so every relevant module is audited once
+
+**Important:** Verify that every module and subproject listed in the plan report is assigned to exactly one part. No module may be left unassigned.
 
 **Each part's instruction MUST include:**
 - Assigned module and file list
