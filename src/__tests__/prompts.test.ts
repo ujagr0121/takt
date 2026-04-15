@@ -4,12 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadTemplate, renderTemplate, _resetCache } from '../shared/prompts/index.js';
-
-const removedPromptTerms = {
-  oldWorkflowWord: ['p', 'i', 'e', 'c', 'e'].join(''),
-  oldWorkflowTitle: ['P', 'i', 'e', 'c', 'e'].join(''),
-  oldStepTitle: ['M', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join(''),
-};
+import { findDeprecatedTerms } from '../../test/helpers/deprecated-terminology.js';
 
 beforeEach(() => {
   _resetCache();
@@ -210,65 +205,56 @@ describe('template content integrity', () => {
     expect(interactiveEn).toContain('## Workflow Structure');
     expect(interactiveEn).toContain('**Workflow:** {{runWorkflow}}');
     expect(interactiveEn).toContain('### Step Logs');
-    expect(interactiveEn).not.toContain(`${removedPromptTerms.oldWorkflowWord}'s job`);
-    expect(interactiveEn).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Structure`);
-    expect(interactiveEn).not.toContain(`**${removedPromptTerms.oldWorkflowTitle}:** {{runWorkflow}}`);
+    expect(findDeprecatedTerms(interactiveEn)).toEqual([]);
 
     const interactiveJa = loadTemplate('score_interactive_system_prompt', 'ja');
     expect(interactiveJa).toContain('ワークフロー実行用の指示書');
     expect(interactiveJa).toContain('## ワークフロー構成');
     expect(interactiveJa).toContain('**ワークフロー:** {{runWorkflow}}');
     expect(interactiveJa).toContain('### ステップログ');
-    expect(interactiveJa).not.toContain('ピースの仕事');
-    expect(interactiveJa).not.toContain('## ピース構成');
+    expect(findDeprecatedTerms(interactiveJa)).toEqual([]);
 
     const policyEn = loadTemplate('score_interactive_policy', 'en');
     expect(policyEn).toContain('instructions for the workflow');
     expect(policyEn).toContain('workflow agents');
-    expect(policyEn).not.toContain(`instructions for the ${removedPromptTerms.oldWorkflowWord}`);
-    expect(policyEn).not.toContain(`${removedPromptTerms.oldWorkflowWord} agents`);
+    expect(findDeprecatedTerms(policyEn)).toEqual([]);
 
     const policyJa = loadTemplate('score_interactive_policy', 'ja');
     expect(policyJa).toContain('ワークフローへの指示書作成');
     expect(policyJa).toContain('ワークフローのエージェント');
-    expect(policyJa).not.toContain('ピースへの指示書作成');
-    expect(policyJa).not.toContain('ピースのエージェント');
+    expect(findDeprecatedTerms(policyJa)).toEqual([]);
 
     const retryEn = loadTemplate('score_retry_system_prompt', 'en');
     expect(retryEn).toContain('Workflow Execution');
     expect(retryEn).toContain('**Failed step:** {{failedStep}}');
     expect(retryEn).toContain('### Step Logs');
-    expect(retryEn).not.toContain(`**Failed ${removedPromptTerms.oldStepTitle.toLowerCase()}:** {{failedStep}}`);
-    expect(retryEn).not.toContain(`### ${removedPromptTerms.oldStepTitle} Logs`);
+    expect(findDeprecatedTerms(retryEn)).toEqual([]);
 
     const retryJa = loadTemplate('score_retry_system_prompt', 'ja');
     expect(retryJa).toContain('ワークフロー実行');
     expect(retryJa).toContain('**失敗ステップ:** {{failedStep}}');
     expect(retryJa).toContain('### ステップログ');
-    expect(retryJa).not.toContain('**失敗ムーブメント:** {{failedStep}}');
-    expect(retryJa).not.toContain('### ムーブメントログ');
+    expect(findDeprecatedTerms(retryJa)).toEqual([]);
 
     const instructEn = loadTemplate('score_instruct_system_prompt', 'en');
     expect(instructEn).toContain('Workflow Execution');
     expect(instructEn).toContain('**Workflow:** {{runWorkflow}}');
-    expect(instructEn).not.toContain('**Piece:** {{runWorkflow}}');
+    expect(findDeprecatedTerms(instructEn)).toEqual([]);
 
     const instructJa = loadTemplate('score_instruct_system_prompt', 'ja');
     expect(instructJa).toContain('ワークフロー実行');
     expect(instructJa).toContain('**ワークフロー:** {{runWorkflow}}');
-    expect(instructJa).not.toContain('**ピース:** {{runWorkflow}}');
+    expect(findDeprecatedTerms(instructJa)).toEqual([]);
 
     const summaryEn = loadTemplate('score_summary_system_prompt', 'en');
     expect(summaryEn).toContain('passed to a workflow');
     expect(summaryEn).toContain('Workflow description: {{workflowDescription}}');
-    expect(summaryEn).not.toContain(`passed to a ${removedPromptTerms.oldWorkflowWord}`);
-    expect(summaryEn).not.toContain('Piece description: {{workflowDescription}}');
+    expect(findDeprecatedTerms(summaryEn)).toEqual([]);
 
     const summaryJa = loadTemplate('score_summary_system_prompt', 'ja');
     expect(summaryJa).toContain('ワークフロー実行用の具体的なタスク指示書');
     expect(summaryJa).toContain('ワークフローの内容: {{workflowDescription}}');
-    expect(summaryJa).not.toContain('ピース実行用の具体的なタスク指示書');
-    expect(summaryJa).not.toContain('ピースの内容: {{workflowDescription}}');
+    expect(findDeprecatedTerms(summaryJa)).toEqual([]);
   });
 
   it('score_slug_system_prompt contains format specification', () => {
@@ -288,18 +274,14 @@ describe('template content integrity', () => {
     expect(en).toContain('- Workflow: {{workflowName}}');
     expect(en).toContain('- Current Step: {{currentStep}}');
     expect(en).toContain('preceding and following steps');
-    expect(en).not.toContain('**Piece**');
-    expect(en).not.toContain('- Piece: {{workflowName}}');
-    expect(en).not.toContain('- Current Movement: {{currentStep}}');
+    expect(findDeprecatedTerms(en)).toEqual([]);
 
     const ja = loadTemplate('perform_agent_system_prompt', 'ja');
     expect(ja).toContain('**ワークフロー**: 複数のステップを組み合わせた処理フロー');
     expect(ja).toContain('- ワークフロー: {{workflowName}}');
     expect(ja).toContain('- 現在のステップ: {{currentStep}}');
     expect(ja).toContain('前後のステップとの連携');
-    expect(ja).not.toContain('**ピース**');
-    expect(ja).not.toContain('- ピース: {{workflowName}}');
-    expect(ja).not.toContain('- 現在のムーブメント: {{currentStep}}');
+    expect(findDeprecatedTerms(ja)).toEqual([]);
   });
 
   it('perform_judge_message contains {{agentOutput}} and {{conditionList}} placeholders', () => {
@@ -315,7 +297,7 @@ describe('template content integrity', () => {
     expect(en).toContain('Do NOT run git commit');
     expect(en).toContain('Do NOT use `cd`');
     expect(en).toContain('## Workflow Context');
-    expect(en).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Context`);
+    expect(findDeprecatedTerms(en)).toEqual([]);
     expect(en).toContain('## Instructions');
   });
 
@@ -326,11 +308,7 @@ describe('template content integrity', () => {
     expect(en).toContain('- Step Iteration: {{stepIteration}}');
     expect(en).toContain('- Step: {{stepName}}');
     expect(en).toContain('Before completing this step');
-    expect(en).not.toContain(`- ${removedPromptTerms.oldWorkflowTitle}: {{workflowName}}`);
-    expect(en).not.toContain(`- ${removedPromptTerms.oldStepTitle} Iteration: {{stepIteration}}`);
-    expect(en).not.toContain(`- ${removedPromptTerms.oldStepTitle}: {{stepName}}`);
-    expect(en).not.toContain(`Before completing this ${removedPromptTerms.oldStepTitle.toLowerCase()}`);
-    expect(en).not.toContain(`after ${removedPromptTerms.oldWorkflowWord} completion`);
+    expect(findDeprecatedTerms(en)).toEqual([]);
 
     const ja = loadTemplate('perform_phase1_message', 'ja');
     expect(ja).toContain('ワークフロー完了後');
@@ -338,12 +316,7 @@ describe('template content integrity', () => {
     expect(ja).toContain('- Step Iteration: {{stepIteration}}');
     expect(ja).toContain('- Step: {{stepName}}');
     expect(ja).toContain('このステップを完了する前に');
-    expect(ja).not.toContain('このピース');
-    expect(ja).not.toContain('- ピース: {{workflowName}}');
-    expect(ja).not.toContain('- Movement Iteration: {{stepIteration}}');
-    expect(ja).not.toContain('- Movement: {{stepName}}');
-    expect(ja).not.toContain('このムーブメントを完了する前に');
-    expect(ja).not.toContain('ピース完了後');
+    expect(findDeprecatedTerms(ja)).toEqual([]);
   });
 
   it('perform_phase1_message contains workflow context variables', () => {
@@ -358,24 +331,22 @@ describe('template content integrity', () => {
     expect(en).toContain('after workflow completion');
     expect(en).toContain('Do NOT modify project source files');
     expect(en).toContain('## Workflow Context');
-    expect(en).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Context`);
+    expect(findDeprecatedTerms(en)).toEqual([]);
     expect(en).toContain('## Instructions');
 
     const ja = loadTemplate('perform_phase2_message', 'ja');
     expect(ja).toContain('ワークフロー完了後');
     expect(ja).toContain('プロジェクトのソースファイルを変更しないでください');
     expect(ja).toContain('## Workflow Context');
-    expect(ja).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Context`);
+    expect(findDeprecatedTerms(ja)).toEqual([]);
   });
 
   it('perform_phase2_message does not reintroduce workflow terminology regressions', () => {
     const en = loadTemplate('perform_phase2_message', 'en');
-    expect(en).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Context`);
-    expect(en).not.toContain(`after ${removedPromptTerms.oldWorkflowWord} completion`);
+    expect(findDeprecatedTerms(en)).toEqual([]);
 
     const ja = loadTemplate('perform_phase2_message', 'ja');
-    expect(ja).not.toContain(`## ${removedPromptTerms.oldWorkflowTitle} Context`);
-    expect(ja).not.toContain('ピース完了後');
+    expect(findDeprecatedTerms(ja)).toEqual([]);
   });
 
   it('perform_phase3_message contains criteria and output variables', () => {

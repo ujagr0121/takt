@@ -7,6 +7,10 @@ import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { vi } from 'vitest';
+import {
+  unexpectedInteractivePreviewConfigKey,
+  unexpectedInteractivePreviewEnvVar,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 // Mock the home directory to use a temp directory
 const testHomeDir = join(tmpdir(), `takt-gc-test-${Date.now()}`);
@@ -38,8 +42,7 @@ describe('loadGlobalConfig', () => {
       rmSync(testHomeDir, { recursive: true });
     }
     delete process.env.TAKT_INTERACTIVE_PREVIEW_STEPS;
-    delete process.env.TAKT_INTERACTIVE_PREVIEW_MOVEMENTS;
-    delete process.env.TAKT_PIECE_RUNTIME_PREPARE;
+    delete process.env[unexpectedInteractivePreviewEnvVar];
   });
 
   it('should return default values when config.yaml does not exist', () => {
@@ -739,18 +742,6 @@ describe('loadGlobalConfig', () => {
     });
   });
 
-  it('should reject the removed preview count key in global config', () => {
-    const taktDir = join(testHomeDir, '.takt');
-    mkdirSync(taktDir, { recursive: true });
-    writeFileSync(
-      getGlobalConfigPath(),
-      'language: en\ninteractive_preview_movements: 5\n',
-      'utf-8',
-    );
-
-    expect(() => loadGlobalConfig()).toThrow(/interactive_preview_movements/);
-  });
-
   it('should accept interactive_preview_steps in global config', () => {
     const taktDir = join(testHomeDir, '.takt');
     mkdirSync(taktDir, { recursive: true });
@@ -764,16 +755,16 @@ describe('loadGlobalConfig', () => {
     expect(config.interactivePreviewSteps).toBe(6);
   });
 
-  it('should reject config with both preview keys set', () => {
+  it('should reject unknown interactive preview key in global config', () => {
     const taktDir = join(testHomeDir, '.takt');
     mkdirSync(taktDir, { recursive: true });
     writeFileSync(
       getGlobalConfigPath(),
-      'language: en\ninteractive_preview_movements: 4\ninteractive_preview_steps: 4\n',
+      `language: en\n${unexpectedInteractivePreviewConfigKey}: 6\n`,
       'utf-8',
     );
 
-    expect(() => loadGlobalConfig()).toThrow(/interactive_preview_movements/);
+    expect(() => loadGlobalConfig()).toThrow(new RegExp(`${unexpectedInteractivePreviewConfigKey}|unrecognized`, 'i'));
   });
 
   it('should save and reload interactive_preview_steps config', () => {
@@ -801,7 +792,6 @@ describe('loadGlobalConfig', () => {
 
     const raw = readFileSync(getGlobalConfigPath(), 'utf-8');
     expect(raw).toContain('interactive_preview_steps: 8');
-    expect(raw).not.toContain('interactive_preview_movements:');
   });
 
   it('should default interactive_preview_steps to undefined', () => {
@@ -835,33 +825,21 @@ describe('loadGlobalConfig', () => {
     expect(config.interactivePreviewSteps).toBe(9);
   });
 
-  it('should reject legacy TAKT_INTERACTIVE_PREVIEW_MOVEMENTS for global config env override', () => {
-    process.env.TAKT_INTERACTIVE_PREVIEW_MOVEMENTS = '10';
+  it('should ignore unknown interactive preview env override for global config', () => {
+    process.env[unexpectedInteractivePreviewEnvVar] = '4';
 
-    expect(() => loadGlobalConfig()).toThrow(/interactive_preview_movements/);
+    const config = loadGlobalConfig();
+
+    expect(config.interactivePreviewSteps).toBeUndefined();
   });
 
-  it('should reject invalid legacy global env values as removed keys before parsing', () => {
-    process.env.TAKT_PIECE_RUNTIME_PREPARE = '{';
+  it('should prefer canonical interactive preview env override over unknown env for global config', () => {
+    process.env[unexpectedInteractivePreviewEnvVar] = '4';
+    process.env.TAKT_INTERACTIVE_PREVIEW_STEPS = '9';
 
-    let thrown: unknown;
-    try {
-      loadGlobalConfig();
-    } catch (error) {
-      thrown = error;
-    }
+    const config = loadGlobalConfig();
 
-    expect(thrown).toBeInstanceOf(Error);
-    expect((thrown as Error).message).toMatch(/piece_runtime_prepare/);
-    expect((thrown as Error).message).toMatch(/workflow_runtime_prepare/);
-    expect((thrown as Error).message).not.toMatch(/valid JSON/);
-  });
-
-  it('should reject global preview env when legacy key is present', () => {
-    process.env.TAKT_INTERACTIVE_PREVIEW_MOVEMENTS = '3';
-    process.env.TAKT_INTERACTIVE_PREVIEW_STEPS = '2';
-
-    expect(() => loadGlobalConfig()).toThrow(/interactive_preview_movements/);
+    expect(config.interactivePreviewSteps).toBe(9);
   });
 
   describe('persona_providers', () => {

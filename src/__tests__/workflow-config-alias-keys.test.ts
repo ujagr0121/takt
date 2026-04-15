@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { WorkflowConfigRawSchema } from '../core/models/index.js';
 import { normalizeWorkflowConfig } from '../infra/config/loaders/workflowParser.js';
+import {
+  unexpectedInitialStepKey,
+  unexpectedMaxStepsKey,
+  unexpectedStepListKey,
+  unexpectedWorkflowConfigKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 const minimalStep = {
   name: 'plan',
@@ -41,42 +47,42 @@ describe('WorkflowConfigRawSchema canonical workflow keys', () => {
   });
 });
 
-describe('WorkflowConfigRawSchema removed workflow keys', () => {
+describe('WorkflowConfigRawSchema unknown workflow keys', () => {
   it.each([
     {
       name: 'removed_workflow_config_key',
       raw: {
         name: 'wf-legacy-workflow-config',
-        piece_config: {},
+        [unexpectedWorkflowConfigKey]: {},
         steps: [minimalStep],
       },
-      expected: /piece_config/i,
+      expected: new RegExp(`${unexpectedWorkflowConfigKey}|unrecognized`, 'i'),
     },
     {
       name: 'removed_step_list_key',
       raw: {
         name: 'wf-legacy-step-list',
-        movements: [minimalStep],
+        [unexpectedStepListKey]: [minimalStep],
       },
-      expected: /movements/i,
+      expected: new RegExp(`${unexpectedStepListKey}|unrecognized`, 'i'),
     },
     {
       name: 'removed_initial_step_key',
       raw: {
         name: 'wf-legacy-initial',
         steps: [minimalStep],
-        initial_movement: 'plan',
+        [unexpectedInitialStepKey]: 'plan',
       },
-      expected: /initial_movement/i,
+      expected: new RegExp(`${unexpectedInitialStepKey}|unrecognized`, 'i'),
     },
     {
       name: 'removed_max_steps_key',
       raw: {
         name: 'wf-legacy-max',
         steps: [minimalStep],
-        max_movements: 3,
+        [unexpectedMaxStepsKey]: 3,
       },
-      expected: /max_movements/i,
+      expected: new RegExp(`${unexpectedMaxStepsKey}|unrecognized`, 'i'),
     },
   ])('$name を reject する', ({ raw, expected }) => {
     expect(() => WorkflowConfigRawSchema.parse(raw)).toThrow(expected);
@@ -140,21 +146,25 @@ describe('normalizeWorkflowConfig canonical workflow keys', () => {
   it('removed top-level workflow aliases are still rejected during normalization', () => {
     const raw = {
       name: 'wf-normalize-removed-alias',
-      piece_config: {
+      [unexpectedWorkflowConfigKey]: {
         provider: 'codex',
       },
       steps: [minimalStep],
     };
 
-    expect(() => normalizeWorkflowConfig(raw, process.cwd())).toThrow(/piece_config/i);
+    expect(() => normalizeWorkflowConfig(raw, process.cwd())).toThrow(
+      new RegExp(`${unexpectedWorkflowConfigKey}|unrecognized`, 'i'),
+    );
   });
 
   it('removed step list aliases are rejected during normalization', () => {
     const raw = {
       name: 'wf-normalize-removed-step-list',
-      movements: [minimalStep],
+      [unexpectedStepListKey]: [minimalStep],
     };
 
-    expect(() => normalizeWorkflowConfig(raw, process.cwd())).toThrow(/movements/i);
+    expect(() => normalizeWorkflowConfig(raw, process.cwd())).toThrow(
+      new RegExp(`${unexpectedStepListKey}|unrecognized`, 'i'),
+    );
   });
 });

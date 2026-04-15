@@ -3,7 +3,6 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { applyLegacyEnvSpecs } from '../infra/config/traced/tracedConfigLegacyEnvAdapter.js';
 import { loadProjectConfigTrace } from '../infra/config/traced/tracedConfigLoader.js';
 import { getGlobalTracedSchema, getProjectTracedSchema } from '../infra/config/traced/tracedConfigSchema.js';
 import { loadTraceEntriesViaRuntime } from '../infra/config/traced/tracedConfigRuntimeBridge.js';
@@ -44,16 +43,6 @@ describe('traced config boundaries', () => {
   afterEach(() => {
     restoreTaktEnv(taktEnvSnapshot);
     vi.restoreAllMocks();
-  });
-
-  it('legacy env adapter rejects removed legacy overrides', () => {
-    process.env.TAKT_LOG_LEVEL = 'debug';
-
-    expect(() => applyLegacyEnvSpecs([{
-      env: 'TAKT_LOG_LEVEL',
-      path: 'logging.level',
-      canonicalPath: 'logging.verbosity',
-    }])).toThrow(/logging\.level.*logging\.verbosity/);
   });
 
   it('runtime bridge keeps parent/child traced origins with actual traced-config runtime', () => {

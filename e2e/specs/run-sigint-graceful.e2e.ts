@@ -128,7 +128,6 @@ describe('E2E: Run tasks graceful shutdown on SIGINT (parallel)', () => {
 
     const afterSummary = stdout.slice(summaryIndex);
     expect(afterSummary).not.toContain('=== Task:');
-    expect(afterSummary).not.toContain('=== Running Piece:');
     expect(afterSummary).not.toContain('Creating clone...');
 
     const finalTasksYaml = readFileSync(tasksFile, 'utf-8');

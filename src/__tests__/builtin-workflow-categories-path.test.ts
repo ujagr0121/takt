@@ -8,6 +8,10 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import {
+  unexpectedWorkflowCategoriesFileName,
+  unexpectedWorkflowCategoryListKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 const languageState = vi.hoisted(() => ({
   value: 'en' as 'en' | 'ja',
@@ -16,9 +20,6 @@ const languageState = vi.hoisted(() => ({
 const pathsState = vi.hoisted(() => ({
   resourcesRoot: '',
 }));
-const removedCategoriesFile = `${['p', 'i', 'e', 'c', 'e'].join('')}-categories.yaml`;
-const removedWorkflowListKey = ['p', 'i', 'e', 'c', 'e', 's'].join('');
-
 vi.mock('../infra/config/global/globalConfig.js', async (importOriginal) => {
   const original = await importOriginal() as Record<string, unknown>;
   return {
@@ -76,30 +77,16 @@ describe('builtin workflow-categories.yaml path and loading', () => {
     const path = getDefaultCategoriesPath(testDir);
     // Then
     expect(path).toBe(join(enResources, 'workflow-categories.yaml'));
-    expect(path).not.toMatch(new RegExp(`${removedCategoriesFile.replace('.', '\\.')}$`));
-  });
-
-  it('should reject removed workflow list key in workflow-categories.yaml', () => {
-    writeFileSync(
-      join(enResources, 'workflow-categories.yaml'),
-      `workflow_categories:
-  Quick Start:
-    ${removedWorkflowListKey}:
-      - default
-`,
-      'utf-8',
-    );
-
-    expect(() => loadDefaultCategories(testDir)).toThrow(new RegExp(`"${removedWorkflowListKey}" has been removed\\. Use "workflows" instead`, 'i'));
+    expect(path).not.toMatch(new RegExp(`${unexpectedWorkflowCategoriesFileName.replace('.', '\\.')}$`));
   });
 
   it('should return null when only the removed builtin categories filename exists', () => {
     // Given: old builtin filename only — loader must not read it after #565
     writeFileSync(
-      join(enResources, removedCategoriesFile),
+      join(enResources, unexpectedWorkflowCategoriesFileName),
       `workflow_categories:
   Legacy:
-    ${removedWorkflowListKey}:
+    ${unexpectedWorkflowCategoryListKey}:
       - default
 `,
       'utf-8',
@@ -152,55 +139,4 @@ describe('builtin workflow-categories.yaml workflow_categories / workflows keys'
     ]);
   });
 
-  it('should reject duplicate workflow_categories keys in the same file', () => {
-    writeFileSync(
-      join(enResources, 'workflow-categories.yaml'),
-      `workflow_categories:
-  Quick:
-    pieces:
-      - default
-workflow_categories:
-  Quick:
-    workflows:
-      - default
-`,
-      'utf-8',
-    );
-
-    expect(() => loadDefaultCategories(testDir)).toThrow(/Map keys must be unique/i);
-  });
-
-  it('should reject duplicate workflow_categories keys before category conflict resolution', () => {
-    writeFileSync(
-      join(enResources, 'workflow-categories.yaml'),
-      `workflow_categories:
-  Legacy:
-    pieces:
-      - default
-workflow_categories:
-  Modern:
-    workflows:
-      - default
-`,
-      'utf-8',
-    );
-
-    expect(() => loadDefaultCategories(testDir)).toThrow(/Map keys must be unique/i);
-  });
-
-  it('should reject when a category node defines a removed legacy workflow-list key', () => {
-    writeFileSync(
-      join(enResources, 'workflow-categories.yaml'),
-      `workflow_categories:
-  Mixed:
-    pieces:
-      - research
-    workflows:
-      - default
-`,
-      'utf-8',
-    );
-
-    expect(() => loadDefaultCategories(testDir)).toThrow(/"pieces" has been removed\. Use "workflows" instead/i);
-  });
 });

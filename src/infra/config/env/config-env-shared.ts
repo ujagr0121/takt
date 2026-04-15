@@ -5,12 +5,6 @@ export interface EnvSpec {
   type: EnvValueType;
 }
 
-export interface LegacyEnvSpec {
-  env: string;
-  path: string;
-  canonicalPath?: string;
-}
-
 function normalizeEnvSegment(segment: string): string {
   return segment
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')

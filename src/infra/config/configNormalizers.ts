@@ -22,20 +22,17 @@ export function normalizeProviderProfiles(
   raw: Record<string, {
     default_permission_mode: string;
     step_permission_overrides?: Record<string, string>;
-    movement_permission_overrides?: Record<string, string>;
   }> | undefined,
 ): ProviderPermissionProfiles | undefined {
   if (!raw) return undefined;
 
-  const entries = Object.entries(raw).map(([provider, profile]) => {
-    if (Object.prototype.hasOwnProperty.call(profile, 'movement_permission_overrides')) {
-      throw new Error('"movement_permission_overrides" has been removed. Use "step_permission_overrides" instead.');
-    }
-    return [provider, {
+  const entries = Object.entries(raw).map(([provider, profile]) => [
+    provider,
+    {
       defaultPermissionMode: profile.default_permission_mode,
       stepPermissionOverrides: profile.step_permission_overrides,
-    }];
-  });
+    },
+  ]);
 
   return Object.fromEntries(entries) as ProviderPermissionProfiles;
 }

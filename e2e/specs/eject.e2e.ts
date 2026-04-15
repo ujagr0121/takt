@@ -38,7 +38,6 @@ describe('E2E: Eject builtin workflows (takt eject)', () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain('default');
     expect(result.stdout).toContain('Available builtin workflows');
-    expect(result.stdout).not.toContain('Available builtin pieces');
   });
 
   it('should eject workflow YAML only to project .takt/ by default', () => {

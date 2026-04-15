@@ -1,19 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import type { SchemaShape, TracedValue } from 'traced-config';
-import {
-  GLOBAL_LEGACY_ENV_SPECS,
-  PROJECT_LEGACY_ENV_SPECS,
-  setNestedConfigValue,
-  type LegacyEnvSpec,
-} from '../env/config-env-overrides.js';
+import { setNestedConfigValue } from '../env/config-env-overrides.js';
 import {
   getGlobalTracedSchema,
   getProjectTracedSchema,
   type TracedOrigin,
 } from './tracedConfigSchema.js';
 import { loadTraceEntriesViaRuntime } from './tracedConfigRuntimeBridge.js';
-import { applyLegacyEnvSpecs } from './tracedConfigLegacyEnvAdapter.js';
 
 type TraceEntry = {
   traced: TracedValue<unknown>;
@@ -27,7 +21,6 @@ interface LoadConfigTraceOptions {
   configPath: string;
   fileOrigin: 'global' | 'local';
   schema: SchemaShape;
-  legacyEnvSpecs?: readonly LegacyEnvSpec[];
   parseErrorPrefix?: string;
   rootObjectError?: string;
   sanitize?: (value: unknown) => unknown;
@@ -148,9 +141,6 @@ export function loadConfigTrace(options: LoadConfigTraceOptions): {
     : {};
   const traceEntries = loadTraceEntriesViaRuntime(options.schema, options.fileOrigin, parsedConfig);
   const rawConfig = buildRawConfig(Object.keys(options.schema), traceEntries);
-  if (options.legacyEnvSpecs) {
-    applyLegacyEnvSpecs(options.legacyEnvSpecs);
-  }
 
   const trace: ConfigTrace = {
     getOrigin(path: string): TracedOrigin {
@@ -173,7 +163,6 @@ export function loadGlobalConfigTrace(
     configPath,
     fileOrigin: 'global',
     schema: getGlobalTracedSchema(),
-    legacyEnvSpecs: GLOBAL_LEGACY_ENV_SPECS,
     rootObjectError: 'Configuration error: ~/.takt/config.yaml must be a YAML object.',
     sanitize,
   });
@@ -186,7 +175,6 @@ export function loadProjectConfigTrace(
     configPath,
     fileOrigin: 'local',
     schema: getProjectTracedSchema(),
-    legacyEnvSpecs: PROJECT_LEGACY_ENV_SPECS,
     parseErrorPrefix: `Configuration error: failed to parse ${configPath}`,
     rootObjectError: `Configuration error: ${configPath} must be a YAML object.`,
   });

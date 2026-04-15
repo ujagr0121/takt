@@ -29,18 +29,17 @@ describe('formatWorkflowLoadWarning', () => {
     expect(warning).toContain('invalid\\tvalue');
   });
 
-  it('legacy キーの issue path は入力値をそのまま表示する', () => {
+  it('issue path は入力値をそのまま表示する', () => {
     const error = new ZodError([
       {
         code: 'custom',
-        path: ['initial_movement'],
+        path: ['unknown_field'],
         message: 'required',
       },
     ]);
 
     const warning = formatWorkflowLoadWarning('workflow', error);
 
-    expect(warning).toContain('initial_movement');
-    expect(warning).not.toContain('initial_step');
+    expect(warning).toContain('unknown_field');
   });
 });

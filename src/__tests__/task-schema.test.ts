@@ -7,6 +7,10 @@ import {
   resolveTaskWorkflowValue,
   resolveTaskStartStepValue,
 } from '../infra/task/schema.js';
+import {
+  unexpectedStartStepKey,
+  unexpectedWorkflowKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 function makePendingRecord() {
   return {
@@ -109,26 +113,21 @@ describe('TaskExecutionConfigSchema', () => {
     expect(config.start_step).toBe('plan');
   });
 
-  it('should reject removed legacy workflow keys', () => {
-    const removedWorkflowKey = ['p', 'i', 'e', 'c', 'e'].join('');
-    const removedStartStepKey = ['start', ['m', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join('')].join('_');
-
+  it('should reject unknown workflow keys', () => {
     expect(() => TaskExecutionConfigSchema.parse({
-      [removedWorkflowKey]: 'legacy-workflow',
+      [unexpectedWorkflowKey]: 'legacy-workflow',
     })).toThrow();
 
     expect(() => TaskExecutionConfigSchema.parse({
-      [removedStartStepKey]: 'plan',
+      [unexpectedStartStepKey]: 'plan',
     })).toThrow();
   });
 
   it('should resolve workflow and start step through shared helpers', () => {
     expect(resolveTaskWorkflowValue({ workflow: 'unit-test' })).toBe('unit-test');
     expect(resolveTaskStartStepValue({ start_step: 'plan' })).toBe('plan');
-    const removedWorkflowKey = ['p', 'i', 'e', 'c', 'e'].join('');
-    const removedStartStepKey = ['start', ['m', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join('')].join('_');
-    expect(resolveTaskWorkflowValue({ [removedWorkflowKey]: 'unit-test' })).toBeUndefined();
-    expect(resolveTaskStartStepValue({ [removedStartStepKey]: 'plan' })).toBeUndefined();
+    expect(resolveTaskWorkflowValue({ [unexpectedWorkflowKey]: 'unit-test' })).toBeUndefined();
+    expect(resolveTaskStartStepValue({ [unexpectedStartStepKey]: 'plan' })).toBeUndefined();
   });
 
   it('should serialize canonical task keys as workflow and start_step', () => {

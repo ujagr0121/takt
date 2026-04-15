@@ -1,75 +1,115 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, join, relative } from 'node:path';
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
+import { findDeprecatedTerms } from '../../test/helpers/deprecated-terminology.js';
 
 const repositoryRoot = process.cwd();
-const targetDirs = ['src/__tests__', 'e2e/specs'];
-const removedWorkflowTerm = ['p', 'i', 'e', 'c', 'e'].join('');
-const removedStepTerm = ['m', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join('');
-const removedTerms = [
-  removedWorkflowTerm,
-  removedStepTerm,
-  `${removedWorkflowTerm}s`,
-  `${removedStepTerm}s`,
-];
-const removedTermsPattern = removedTerms.join('|');
-const legacyPatternChecks = [
-  {
-    name: 'test titles',
-    pattern: new RegExp(`\\b(?:it|describe)\\((['"\`])[^'"\\\`\\n]*\\b(?:${removedTermsPattern})\\b[^'"\\\`\\n]*\\1`, 'g'),
-  },
-  {
-    name: 'comments',
-    pattern: new RegExp(`^\\s*//.*\\b(?:${removedTermsPattern})\\b.*$`, 'gm'),
-  },
-  {
-    name: 'helper variable names',
-    pattern: new RegExp(`\\b(?:const|let)\\s+[A-Za-z0-9_]*(?:${removedTermsPattern})[A-Za-z0-9_]*\\b`, 'g'),
-  },
-  {
-    name: 'fixture names',
-    pattern: new RegExp(`name:\\s*(['"\`])[^'"\\\`\\n]*\\b(?:${removedTermsPattern})\\b[^'"\\\`\\n]*\\1`, 'g'),
-  },
+const scanFileSuffixes = ['.ts', '.json', '.sh', '.md', '.yaml', '.yml'];
+const skipRelativePaths = new Set(['src/__tests__/test-terminology-guard.test.ts']);
+const requiredUntrackedGuardPaths = [
+  'test/helpers/deprecated-terminology.ts',
+  'test/helpers/unknown-contract-test-keys.ts',
 ];
 
-function collectTestFiles(dir: string): string[] {
-  const entries = readdirSync(dir);
-  const files: string[] = [];
+function shouldScanFile(relativePath: string): boolean {
+  if (skipRelativePaths.has(relativePath)) {
+    return false;
+  }
 
-  for (const entry of entries) {
-    const fullPath = join(dir, entry);
-    const stat = statSync(fullPath);
-    if (stat.isDirectory()) {
-      files.push(...collectTestFiles(fullPath));
-      continue;
+  if (basename(relativePath).startsWith('CHANGELOG')) {
+    return false;
+  }
+
+  return scanFileSuffixes.some((suffix) => relativePath.endsWith(suffix));
+}
+
+function collectTrackedRepositoryFiles(): string[] {
+  const trackedPaths = execFileSync('git', ['ls-files', '--cached', '-z'], {
+    cwd: repositoryRoot,
+    encoding: 'utf-8',
+  });
+
+  return trackedPaths
+    .split('\0')
+    .filter((relativePath) => relativePath.length > 0)
+    .filter(shouldScanFile)
+    .filter((relativePath) => existsSync(join(repositoryRoot, relativePath)))
+    .map((relativePath) => join(repositoryRoot, relativePath));
+}
+
+function resolveRequiredRepositoryFile(relativePath: string): string {
+  const absolutePath = join(repositoryRoot, relativePath);
+  if (!existsSync(absolutePath)) {
+    throw new Error(`Required terminology guard target does not exist: ${relativePath}`);
+  }
+  return absolutePath;
+}
+
+function collectTerminologyGuardTargets(): string[] {
+  return Array.from(
+    new Set([
+      ...collectTrackedRepositoryFiles(),
+      ...requiredUntrackedGuardPaths.map(resolveRequiredRepositoryFile),
+    ]),
+  ).sort();
+}
+
+function collectDeprecatedTermViolations(files: string[]): string[] {
+  const violations: string[] = [];
+
+  for (const file of files) {
+    const relativePath = relative(repositoryRoot, file);
+
+    for (const match of findDeprecatedTerms(relativePath)) {
+      violations.push(`${relativePath}:path:${match}`);
     }
-    if (entry.endsWith('.test.ts') || entry.endsWith('.e2e.ts')) {
-      files.push(fullPath);
+
+    const content = readFileSync(file, 'utf-8').split(repositoryRoot).join('');
+    for (const match of findDeprecatedTerms(content)) {
+      violations.push(`${relativePath}:content:${match}`);
     }
   }
 
-  return files;
+  return violations;
 }
 
 describe('test terminology guard', () => {
-  it('keeps removed legacy terms out of test titles, comments, helper variables, and fixture names', () => {
-    const files = targetDirs.flatMap((dir) => collectTestFiles(join(repositoryRoot, dir)));
-    const violations: string[] = [];
+  it('includes changed builtin instruction assets in the recursive guard scope', () => {
+    const files = collectTerminologyGuardTargets().map((file) => relative(repositoryRoot, file));
 
-    for (const file of files) {
-      if (file.endsWith('test-terminology-guard.test.ts')) {
-        continue;
-      }
+    expect(files).toContain('builtins/en/facets/instructions/supervise.md');
+  });
 
-      const content = readFileSync(file, 'utf-8');
+  it('includes tracked helper, source, and hidden-directory files covered by the repository-wide terminology contract', () => {
+    const files = collectTerminologyGuardTargets().map((file) => relative(repositoryRoot, file));
 
-      for (const check of legacyPatternChecks) {
-        const matches = content.match(check.pattern) ?? [];
-        for (const match of matches) {
-          violations.push(`${relative(repositoryRoot, file)} [${check.name}]: ${match.trim()}`);
-        }
-      }
+    expect(files).toContain('test/helpers/deprecated-terminology.ts');
+    expect(files).toContain('test/helpers/unknown-contract-test-keys.ts');
+    expect(files).toContain('src/core/models/config-schemas.ts');
+    expect(files).toContain('src/infra/config/configNormalizers.ts');
+    expect(files).toContain('src/infra/config/traced/tracedConfigLoader.ts');
+    expect(files).toContain('.github/workflows/ci.yml');
+    expect(files).toContain('.devcontainer/devcontainer.json');
+    expect(files).toContain('package.json');
+  });
+
+  it('does not expand the guard scope to arbitrary untracked files in the worktree', () => {
+    const relativeTempFile = 'tmp-terminology-guard-untracked.md';
+    const absoluteTempFile = join(repositoryRoot, relativeTempFile);
+    writeFileSync(absoluteTempFile, 'temporary file for terminology guard scope test');
+
+    try {
+      const files = collectTerminologyGuardTargets().map((file) => relative(repositoryRoot, file));
+      expect(files).not.toContain(relativeTempFile);
+    } finally {
+      rmSync(absoluteTempFile, { force: true });
     }
+  });
+
+  it('keeps deprecated terminology out of file paths and contents across repository-facing assets', () => {
+    const files = collectTerminologyGuardTargets();
+    const violations = collectDeprecatedTermViolations(files);
 
     expect(violations).toEqual([]);
   });

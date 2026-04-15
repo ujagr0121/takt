@@ -1,13 +1,5 @@
-import { z } from 'zod/v4';
+import { WorkflowCategoryOverlaySchema } from '../../../core/models/index.js';
 import type { CategoryConfig, WorkflowCategoryNode } from './workflowCategoryTypes.js';
-
-const CategoryConfigSchema = z.object({
-  workflow_categories: z.record(z.string(), z.unknown()).optional(),
-  show_others_category: z.boolean().optional(),
-  others_category_name: z.string().min(1).optional(),
-}).passthrough();
-
-const REMOVED_CATEGORY_ROOT_KEY = 'p' + 'iece_categories';
 
 interface RawCategoryConfig {
   workflow_categories?: Record<string, unknown>;
@@ -56,9 +48,6 @@ function parseStringNameList(raw: unknown, sourceLabel: string, path: string[]):
 }
 
 function parseWorkflows(raw: Record<string, unknown>, sourceLabel: string, path: string[]): string[] {
-  if (Object.prototype.hasOwnProperty.call(raw, 'pieces')) {
-    throw new Error(`"pieces" has been removed. Use "workflows" instead (${sourceLabel} at ${path.join(' > ')})`);
-  }
   return Object.prototype.hasOwnProperty.call(raw, 'workflows')
     ? parseStringNameList(raw.workflows, sourceLabel, path)
     : [];
@@ -81,9 +70,6 @@ function parseCategoryNode(
     if (key === 'workflows') {
       continue;
     }
-    if (key === 'pieces') {
-      throw new Error(`"pieces" has been removed. Use "workflows" instead (${sourceLabel} at ${path.join(' > ')})`);
-    }
     if (!isRecord(value)) {
       throw new Error(`category "${key}" must be an object in ${sourceLabel} at ${[...path, key].join(' > ')}`);
     }
@@ -105,12 +91,7 @@ function parseCategoryConfig(raw: unknown, sourceLabel: string): ParsedCategoryC
   if (!raw || typeof raw !== 'object') {
     return null;
   }
-
-  const parsed = CategoryConfigSchema.parse(raw) as RawCategoryConfig;
-  const rawConfig = raw as Record<string, unknown>;
-  if (Object.prototype.hasOwnProperty.call(rawConfig, REMOVED_CATEGORY_ROOT_KEY)) {
-    throw new Error(`A removed legacy category root key was found. Use "workflow_categories" instead (${sourceLabel})`);
-  }
+  const parsed = WorkflowCategoryOverlaySchema.parse(raw) as RawCategoryConfig;
 
   const result: ParsedCategoryConfig = {};
   if (Object.prototype.hasOwnProperty.call(parsed, 'workflow_categories')) {

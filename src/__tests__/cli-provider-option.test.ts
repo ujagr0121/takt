@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { program } from '../app/cli/program.js';
 
-const removedWorkflowOptionName = `--${['p', 'i', 'e', 'c', 'e'].join('')}`;
-
 describe('CLI --provider option', () => {
   it('should include cursor in provider help text', () => {
     const providerOption = program.options.find((option) => option.long === '--provider');
@@ -18,10 +16,10 @@ describe('CLI --provider option', () => {
     expect(providerOption?.description).toMatch(/claude\|/);
   });
 
-  it('should not expose removed legacy workflow option', () => {
-    const removedWorkflowOption = program.options.find((option) => option.long === removedWorkflowOptionName);
+  it('should expose only one workflow option', () => {
+    const workflowOptions = program.options.filter((option) => option.long === '--workflow');
 
-    expect(removedWorkflowOption).toBeUndefined();
+    expect(workflowOptions).toHaveLength(1);
   });
 
   it('should expose --workflow as the canonical workflow option', () => {

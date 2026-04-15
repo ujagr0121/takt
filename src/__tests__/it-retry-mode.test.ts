@@ -343,7 +343,6 @@ describe('E2E: Retry mode with failure context injection', () => {
     expect(systemPrompt).toContain('Previous attempt: added missing mocks but still failing');
 
     // absent fields should NOT appear as sections
-    expect(systemPrompt).not.toContain(`Failed ${['m', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join('')}`);
     expect(systemPrompt).not.toContain('Last Message');
   });
 

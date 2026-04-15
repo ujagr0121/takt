@@ -10,6 +10,16 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync, readFileSync } from 'nod
 import { join } from 'node:path';
 import { tmpdir, homedir } from 'node:os';
 import type { GlobalConfig } from '../core/models/config-types.js';
+import {
+  unexpectedEnableBuiltinWorkflowsConfigKey,
+  unexpectedNotificationWorkflowAbortConfigKey,
+  unexpectedNotificationWorkflowCompleteConfigKey,
+  unexpectedWorkflowArpeggioConfigKey,
+  unexpectedWorkflowCategoriesFileConfigKey,
+  unexpectedWorkflowMcpServersConfigKey,
+  unexpectedWorkflowOverridesConfigKey,
+  unexpectedWorkflowRuntimePrepareConfigKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 // Mock the getGlobalConfigPath to use a test directory
 let testConfigPath: string;
@@ -188,29 +198,29 @@ workflow_overrides:
       expect(loaded.workflowOverrides?.steps?.implement?.qualityGates).toEqual([]);
     });
 
-    it('should reject the removed override key when workflow_overrides is also present', () => {
+    it('should reject an unexpected override key when workflow_overrides is also present', () => {
       const configContent = `
 workflow_overrides:
   quality_gates:
     - "new"
-piece_overrides:
+unexpected_overrides:
   quality_gates:
-    - "legacy"
+    - "ignored"
 `;
       writeFileSync(testConfigPath, configContent, 'utf-8');
 
       const manager = GlobalConfigManager.getInstance();
-      expect(() => manager.load()).toThrow(/piece_overrides/i);
+      expect(() => manager.load()).toThrow(/unexpected_overrides/i);
     });
 
-    it('should reject the removed override key even when semantically identical to workflow_overrides', () => {
+    it('should reject an unexpected override key even when semantically identical to workflow_overrides', () => {
       const configContent = `
 workflow_overrides:
   steps:
     implement:
       quality_gates:
         - "shared"
-piece_overrides:
+unexpected_overrides:
   steps:
     implement:
       quality_gates:
@@ -219,7 +229,7 @@ piece_overrides:
       writeFileSync(testConfigPath, configContent, 'utf-8');
 
       const manager = GlobalConfigManager.getInstance();
-      expect(() => manager.load()).toThrow(/piece_overrides/i);
+      expect(() => manager.load()).toThrow(/unexpected_overrides/i);
     });
 
     it('should save workflowOverrides using workflow_overrides and steps keys', () => {
@@ -239,7 +249,6 @@ piece_overrides:
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_overrides:');
       expect(saved).toContain('steps:');
-      expect(saved).not.toContain('piece_overrides:');
     });
   });
 
@@ -300,20 +309,70 @@ logging:
   describe('workflow-facing global aliases', () => {
     it.each([
       [
-        'workflow_arpeggio with removed-key alias',
-        ['workflow_arpeggio:', '  custom_merge_files: true', 'piece_arpeggio:', '  custom_merge_files: false'],
+        unexpectedWorkflowOverridesConfigKey,
+        [
+          `${unexpectedWorkflowOverridesConfigKey}:`,
+          '  quality_gates:',
+          '    - blocked',
+        ].join('\n'),
       ],
       [
-        'workflow_mcp_servers with removed-key alias',
-        ['workflow_mcp_servers:', '  http: true', 'piece_mcp_servers:', '  http: false'],
+        unexpectedWorkflowRuntimePrepareConfigKey,
+        [
+          `${unexpectedWorkflowRuntimePrepareConfigKey}:`,
+          '  custom_scripts: true',
+        ].join('\n'),
       ],
       [
-        'enable_builtin_workflows with removed legacy alias',
-        ['enable_builtin_workflows: true', 'enable_builtin_pieces: false'],
+        unexpectedWorkflowArpeggioConfigKey,
+        [
+          `${unexpectedWorkflowArpeggioConfigKey}:`,
+          '  custom_data_source_modules: true',
+          '  custom_merge_inline_js: false',
+          '  custom_merge_files: true',
+        ].join('\n'),
       ],
       [
-        'workflow_categories_file with removed legacy alias',
-        ['workflow_categories_file: /tmp/workflows.yaml', 'piece_categories_file: /tmp/pieces.yaml'],
+        unexpectedWorkflowMcpServersConfigKey,
+        [
+          `${unexpectedWorkflowMcpServersConfigKey}:`,
+          '  stdio: true',
+          '  http: false',
+          '  sse: true',
+        ].join('\n'),
+      ],
+      [unexpectedEnableBuiltinWorkflowsConfigKey, `${unexpectedEnableBuiltinWorkflowsConfigKey}: true`],
+      [
+        unexpectedWorkflowCategoriesFileConfigKey,
+        `${unexpectedWorkflowCategoriesFileConfigKey}: /tmp/removed-workflow-categories.yaml`,
+      ],
+    ])('should reject unknown workflow-facing key %s in global config yaml', (unknownKey, content) => {
+      writeFileSync(testConfigPath, `${content}\n`, 'utf-8');
+
+      expect(() => GlobalConfigManager.getInstance().load()).toThrow(new RegExp(`${unknownKey}|unrecognized`, 'i'));
+    });
+
+    it.each([
+      unexpectedNotificationWorkflowCompleteConfigKey,
+      unexpectedNotificationWorkflowAbortConfigKey,
+    ])('should reject unknown notification workflow key %s in global config yaml', (unknownKey) => {
+      writeFileSync(
+        testConfigPath,
+        ['notification_sound_events:', `  ${unknownKey}: true`].join('\n'),
+        'utf-8',
+      );
+
+      expect(() => GlobalConfigManager.getInstance().load()).toThrow(new RegExp(`${unknownKey}|unrecognized`, 'i'));
+    });
+
+    it.each([
+      [
+        'workflow_arpeggio with duplicate canonical keys',
+        ['workflow_arpeggio:', '  custom_merge_files: true', 'workflow_arpeggio:', '  custom_merge_files: false'],
+      ],
+      [
+        'workflow_mcp_servers with duplicate canonical keys',
+        ['workflow_mcp_servers:', '  http: true', 'workflow_mcp_servers:', '  http: false'],
       ],
       [
         'notification workflow keys with legacy keys',
@@ -325,10 +384,10 @@ logging:
           '  workflow_abort: true',
         ],
       ],
-    ])('should fail fast when %s aliases differ', (_label, lines) => {
+    ])('should fail fast when %s are duplicated', (_label, lines) => {
       writeFileSync(testConfigPath, `${lines.join('\n')}\n`, 'utf-8');
 
-      expect(() => GlobalConfigManager.getInstance().load()).toThrow(/piece_|enable_builtin_pieces|Map keys must be unique/i);
+      expect(() => GlobalConfigManager.getInstance().load()).toThrow(/Map keys must be unique/i);
     });
 
     it('should load workflow_runtime_prepare policy block', () => {
@@ -352,22 +411,6 @@ logging:
 
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_runtime_prepare:');
-      expect(saved).not.toContain('piece_runtime_prepare:');
-    });
-
-    it('should reject a removed runtime.prepare alias when workflow_runtime_prepare is also present', () => {
-      writeFileSync(
-        testConfigPath,
-        [
-          'workflow_runtime_prepare:',
-          '  custom_scripts: true',
-          'piece_runtime_prepare:',
-          '  custom_scripts: false',
-        ].join('\n'),
-        'utf-8',
-      );
-
-      expect(() => GlobalConfigManager.getInstance().load()).toThrow(/piece_runtime_prepare/i);
     });
 
     it('should load workflow_arpeggio policy block', () => {
@@ -404,7 +447,6 @@ logging:
 
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_arpeggio:');
-      expect(saved).not.toContain('piece_arpeggio:');
     });
 
     it('should load workflow_mcp_servers config block', () => {
@@ -428,7 +470,6 @@ logging:
 
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_mcp_servers:');
-      expect(saved).not.toContain('piece_mcp_servers:');
     });
 
     it('should load enable_builtin_workflows from the canonical key', () => {
@@ -448,7 +489,6 @@ logging:
 
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('enable_builtin_workflows: true');
-      expect(saved).not.toContain('enable_builtin_pieces:');
     });
 
     it('should save workflowCategoriesFile using workflow_categories_file key', () => {
@@ -460,7 +500,6 @@ logging:
 
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_categories_file: /tmp/workflow-categories.yaml');
-      expect(saved).not.toContain('piece_categories_file:');
     });
 
     it('should load workflow notification keys with canonical workflow key names', () => {
@@ -495,8 +534,6 @@ logging:
       const saved = readFileSync(testConfigPath, 'utf-8');
       expect(saved).toContain('workflow_complete: true');
       expect(saved).toContain('workflow_abort: false');
-      expect(saved).not.toContain('piece_complete:');
-      expect(saved).not.toContain('piece_abort:');
     });
   });
 });

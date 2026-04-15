@@ -3,6 +3,7 @@ import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { vi } from 'vitest';
+import { unexpectedStepPermissionOverrideKey } from '../../test/helpers/unknown-contract-test-keys.js';
 
 const testHomeDir = join(tmpdir(), `takt-gpp-test-${Date.now()}`);
 
@@ -151,7 +152,7 @@ describe('global provider_profiles', () => {
     }
   });
 
-  it('rejects the removed provider profile override key', () => {
+  it('rejects unknown provider profile override keys', () => {
     const taktDir = join(testHomeDir, '.takt');
     mkdirSync(taktDir, { recursive: true });
     writeFileSync(
@@ -161,13 +162,13 @@ describe('global provider_profiles', () => {
         'provider_profiles:',
         '  codex:',
         '    default_permission_mode: full',
-        '    movement_permission_overrides:',
+        `    ${unexpectedStepPermissionOverrideKey}:`,
         '      ai_fix: edit',
       ].join('\n'),
       'utf-8',
     );
 
-    expect(() => loadGlobalConfig()).toThrow(/movement_permission_overrides/i);
+    expect(() => loadGlobalConfig()).toThrow(new RegExp(`${unexpectedStepPermissionOverrideKey}|unrecognized`, 'i'));
   });
 
   it('rejects duplicate step_permission_overrides keys at YAML parse time', () => {
@@ -252,6 +253,5 @@ describe('global provider_profiles', () => {
 
     const raw = readFileSync(getGlobalConfigPath(), 'utf-8');
     expect(raw).toContain('step_permission_overrides:');
-    expect(raw).not.toContain('movement_permission_overrides:');
   });
 });

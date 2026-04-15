@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkflowConfig } from '../core/models/index.js';
 
-const legacyEngineExport = ['Piece', 'Engine'].join('');
-const legacyRuleExport = ['determineNext', 'Move', 'ment', 'ByRules'].join('');
-
 const workflowEngineError = new Error('workflow-engine-constructor-called');
 const mockWorkflowEngine = vi.fn().mockImplementation(function MockWorkflowEngine() {
   return {
@@ -204,7 +201,7 @@ describe('workflow execution canonical entrypoints', () => {
     vi.resetModules();
   });
 
-  it('should expose step-based transition APIs and hide removed legacy exports', async () => {
+  it('should expose step-based transition APIs', async () => {
     // When
     const workflowModule = await vi.importActual<typeof import('../core/workflow/index.js')>(
       '../core/workflow/index.js',
@@ -215,8 +212,6 @@ describe('workflow execution canonical entrypoints', () => {
     expect(typeof workflowModule.determineNextStepByRules).toBe('function');
     expect('WorkflowEngine' in workflowModule).toBe(true);
     expect('determineNextStepByRules' in workflowModule).toBe(true);
-    expect(legacyEngineExport in workflowModule).toBe(false);
-    expect(legacyRuleExport in workflowModule).toBe(false);
   });
 
   it('should expose executeWorkflow from the workflow execution module', async () => {
@@ -224,7 +219,6 @@ describe('workflow execution canonical entrypoints', () => {
 
     expect(typeof executionModule.executeWorkflow).toBe('function');
     expect('executeWorkflow' in executionModule).toBe(true);
-    expect(['execute', legacyWorkflowOptionKey()].join('') in executionModule).toBe(false);
   });
 
   it('should expose executeWorkflow from the task feature index only', async () => {
@@ -232,7 +226,6 @@ describe('workflow execution canonical entrypoints', () => {
 
     expect(typeof tasksModule.executeWorkflow).toBe('function');
     expect('executeWorkflow' in tasksModule).toBe(true);
-    expect(['execute', legacyWorkflowOptionKey()].join('') in tasksModule).toBe(false);
   });
 
   it('should construct WorkflowEngine through executeWorkflow', async () => {
@@ -270,7 +263,3 @@ describe('workflow execution canonical entrypoints', () => {
     );
   });
 });
-
-function legacyWorkflowOptionKey(): string {
-  return ['Pi', 'ece'].join('');
-}

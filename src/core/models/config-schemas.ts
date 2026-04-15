@@ -62,6 +62,12 @@ export const WorkflowCategoryConfigNodeSchema: z.ZodType<WorkflowCategoryConfigN
 
 export const WorkflowCategoryConfigSchema = z.record(z.string(), WorkflowCategoryConfigNodeSchema);
 
+export const WorkflowCategoryOverlaySchema = z.object({
+  workflow_categories: WorkflowCategoryConfigSchema.optional(),
+  show_others_category: z.boolean().optional(),
+  others_category_name: z.string().min(1).optional(),
+}).strict();
+
 /** Project config schema */
 const ProjectConfigObjectSchema = z.object({
   language: LanguageSchema.optional(),
@@ -132,7 +138,7 @@ const GlobalOnlyConfigSchema = z.object({
     workflow_abort: z.boolean().optional(),
     run_complete: z.boolean().optional(),
     run_abort: z.boolean().optional(),
-  }).optional(),
+  }).strict().optional(),
   auto_fetch: z.boolean().optional().default(false),
 });
 

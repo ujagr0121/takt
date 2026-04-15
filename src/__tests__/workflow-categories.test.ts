@@ -134,15 +134,6 @@ describe('workflow categories - listWorkflowEntries', () => {
     expect(reactEntry!.source).toBe('project');
   });
 
-  it('should ignore removed legacy workflow directories during discovery', () => {
-    const legacyDir = join(tempDir, '.takt', 'pieces');
-    mkdirSync(legacyDir, { recursive: true });
-    createWorkflow(legacyDir, 'legacy-only');
-
-    const entries = listWorkflowEntries(tempDir);
-
-    expect(entries.some((entry) => entry.source === 'project' && entry.name === 'legacy-only')).toBe(false);
-  });
 });
 
 describe('workflow categories - loadAllWorkflows', () => {

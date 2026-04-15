@@ -2,6 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import {
+  unexpectedInitialStepKey,
+  unexpectedMaxStepsKey,
+  unexpectedStepListKey,
+  unexpectedWorkflowConfigKey,
+  unexpectedWorkflowDirName,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 const languageState = vi.hoisted(() => ({ value: 'en' as 'en' | 'ja' }));
 
@@ -97,13 +104,12 @@ steps:
     expect(config!.steps[0]!.name).toBe('start');
   });
 
-  it('should not resolve project-local workflows from the removed legacy workflow directory', () => {
-    // Given
-    const legacyWorkflowsDir = join(testDir, '.takt', 'pieces');
-    mkdirSync(legacyWorkflowsDir, { recursive: true });
+  it('should not resolve project-local workflows from an unrelated workflow directory', () => {
+    const unexpectedWorkflowsDir = join(testDir, '.takt', unexpectedWorkflowDirName);
+    mkdirSync(unexpectedWorkflowsDir, { recursive: true });
 
-    writeFileSync(join(legacyWorkflowsDir, 'legacy-only.yaml'), `
-name: legacy-only
+    writeFileSync(join(unexpectedWorkflowsDir, 'unexpected-only.yaml'), `
+name: unexpected-only
 max_steps: 2
 initial_step: start
 steps:
@@ -115,49 +121,43 @@ steps:
         next: COMPLETE
 `);
 
-    // When
-    const config = loadWorkflow('legacy-only', testDir);
+    const config = loadWorkflow('unexpected-only', testDir);
 
-    // Then
     expect(config).toBeNull();
   });
 
-  it('should not let entries in the removed legacy workflow directory shadow builtin workflows', () => {
-    // Given
-    const legacyWorkflowsDir = join(testDir, '.takt', 'pieces');
-    mkdirSync(legacyWorkflowsDir, { recursive: true });
+  it('should not let entries in unrelated workflow directories shadow builtin workflows', () => {
+    const unexpectedWorkflowsDir = join(testDir, '.takt', unexpectedWorkflowDirName);
+    mkdirSync(unexpectedWorkflowsDir, { recursive: true });
 
-    writeFileSync(join(legacyWorkflowsDir, 'default.yaml'), `
+    writeFileSync(join(unexpectedWorkflowsDir, 'default.yaml'), `
 name: default
-description: Legacy override
+description: Unexpected override
 max_steps: 1
-initial_step: legacy
+initial_step: unexpected
 steps:
-  - name: legacy
-    instruction: "Legacy directory should not shadow builtin workflows"
+  - name: unexpected
+    instruction: "Unexpected directory should not shadow builtin workflows"
     rules:
       - condition: done
         next: COMPLETE
 `);
 
-    // When
     const config = loadWorkflow('default', testDir);
 
-    // Then
     expect(config).not.toBeNull();
     expect(config!.name).toBe('default');
-    expect(config!.initialStep).not.toBe('legacy');
+    expect(config!.initialStep).not.toBe('unexpected');
   });
 
-  it('should reject legacy workflow YAML keys', () => {
-    // Given
+  it('should reject unknown workflow YAML keys', () => {
     const workflowsDir = join(testDir, '.takt', 'workflows');
     mkdirSync(workflowsDir, { recursive: true });
 
     writeFileSync(join(workflowsDir, 'legacy-keys.yaml'), `
-name: legacy-keys
+name: unknown-keys
 max_steps: 3
-initial_movement: plan
+${unexpectedInitialStepKey}: plan
 steps:
   - name: plan
     instruction: "Legacy keys must fail"
@@ -166,29 +166,28 @@ steps:
         next: COMPLETE
 `);
 
-    // Then
-    expect(() => loadWorkflow('legacy-keys', testDir)).toThrow(/initial_movement/i);
+    expect(() => loadWorkflow('legacy-keys', testDir)).toThrow(new RegExp(unexpectedInitialStepKey, 'i'));
   });
 
   it.each([
     {
-      name: 'removed_step_list_key',
+      name: 'unexpected_step_list_key',
       yaml: `
-name: legacy-step-list
-movements:
+name: unexpected-step-list
+${unexpectedStepListKey}:
   - name: plan
     instruction: "Legacy keys must fail"
     rules:
       - condition: done
         next: COMPLETE
 `,
-      expected: /movements/i,
+      expected: new RegExp(unexpectedStepListKey, 'i'),
     },
     {
-      name: 'removed_workflow_config_key',
+      name: 'unexpected_workflow_config_key',
       yaml: `
-name: legacy-workflow-config
-piece_config:
+name: unexpected-workflow-config
+${unexpectedWorkflowConfigKey}:
   provider: mock
 steps:
   - name: plan
@@ -197,13 +196,13 @@ steps:
       - condition: done
         next: COMPLETE
 `,
-      expected: /piece_config/i,
+      expected: new RegExp(unexpectedWorkflowConfigKey, 'i'),
     },
     {
-      name: 'removed_max_steps_key',
+      name: 'unexpected_max_steps_key',
       yaml: `
-name: legacy-step-limit
-max_movements: 2
+name: unexpected-step-limit
+${unexpectedMaxStepsKey}: 2
 steps:
   - name: plan
     instruction: "Legacy keys must fail"
@@ -211,15 +210,13 @@ steps:
       - condition: done
         next: COMPLETE
 `,
-      expected: /max_movements/i,
+      expected: new RegExp(unexpectedMaxStepsKey, 'i'),
     },
-  ])('should reject legacy workflow YAML key: $name', ({ name, yaml, expected }) => {
-    // Given
+  ])('should reject unknown workflow YAML key: $name', ({ name, yaml, expected }) => {
     const workflowsDir = join(testDir, '.takt', 'workflows');
     mkdirSync(workflowsDir, { recursive: true });
     writeFileSync(join(workflowsDir, `${name}.yaml`), yaml);
 
-    // Then
     expect(() => loadWorkflow(name, testDir)).toThrow(expected);
   });
 

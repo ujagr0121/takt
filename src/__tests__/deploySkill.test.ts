@@ -141,11 +141,10 @@ describe('deploySkill', () => {
       expect(info).not.toHaveBeenCalledWith(expect.stringContaining('テンプレート'));
     });
 
-    // Regression #565 / 565-TESTS-DEPLOY-SKILL-WORKFLOWS: workflow YAMLs deploy under workflows/, not the removed legacy directory.
-    it('should not create the removed legacy workflow directory for workflow YAMLs', async () => {
+    // Regression #565 / 565-TESTS-DEPLOY-SKILL-WORKFLOWS: workflow YAMLs deploy under workflows/.
+    it('should deploy workflow YAMLs under workflows', async () => {
       await deploySkill();
       expect(existsSync(join(skillDir, 'workflows', 'default.yaml'))).toBe(true);
-      expect(existsSync(join(skillDir, 'pieces'))).toBe(false);
     });
   });
 

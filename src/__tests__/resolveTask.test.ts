@@ -4,6 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import type { TaskInfo } from '../infra/task/index.js';
 import * as infraTask from '../infra/task/index.js';
+import { unexpectedWorkflowKey } from '../../test/helpers/unknown-contract-test-keys.js';
 
 const mockGetGitProvider = vi.hoisted(() => vi.fn());
 
@@ -433,19 +434,18 @@ describe('resolveTaskExecution', () => {
     expect(result.initialIterationOverride).toBeUndefined();
   });
 
-  it('should fail fast when a removed legacy workflow key is present', async () => {
+  it('should fail fast when an unknown workflow key is present', async () => {
     const root = createTempProjectDir();
-    const removedWorkflowKey = ['p', 'i', 'e', 'c', 'e'].join('');
     const task = createTask({
       data: ({
         task: 'Run task',
         workflow: 'workflow-a',
-        [removedWorkflowKey]: 'workflow-conflict',
+        [unexpectedWorkflowKey]: 'workflow-conflict',
       } as unknown) as NonNullable<TaskInfo['data']>,
     });
 
     await expect(resolveTaskExecutionStrict(task, root)).rejects.toThrow(
-      new RegExp(removedWorkflowKey)
+      new RegExp(unexpectedWorkflowKey)
     );
   });
 

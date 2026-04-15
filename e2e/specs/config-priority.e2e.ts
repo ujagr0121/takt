@@ -6,11 +6,13 @@ import { parse as parseYaml } from 'yaml';
 import { createIsolatedEnv, updateIsolatedConfig, type IsolatedEnv } from '../helpers/isolated-env';
 import { createTestRepo, type TestRepo } from '../helpers/test-repo';
 import { runTakt } from '../helpers/takt-runner';
+import {
+  unexpectedWorkflowCliOptionFlag,
+  unexpectedWorkflowKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const removedWorkflowAlias = `--${['p', 'i', 'e', 'c', 'e'].join('')}`;
-const removedWorkflowKey = ['p', 'i', 'e', 'c', 'e'].join('');
 
 function readFirstTask(repoPath: string): Record<string, unknown> {
   const tasksPath = join(repoPath, '.takt', 'tasks.yaml');
@@ -86,16 +88,16 @@ describe('E2E: Config priority (workflow / autoPr)', () => {
 
     const task = readFirstTask(testRepo.path);
     expect(task['workflow']).toBe(workflowPath);
-    expect(task[removedWorkflowKey]).toBeUndefined();
+    expect(task[unexpectedWorkflowKey]).toBeUndefined();
   }, 240_000);
 
-  it('should reject removed legacy workflow alias for takt add', () => {
+  it('should reject unknown workflow options for takt add', () => {
     const workflowPath = resolve(__dirname, '../fixtures/workflows/simple.yaml');
     const result = runTakt({
       args: [
-        removedWorkflowAlias, workflowPath,
+        unexpectedWorkflowCliOptionFlag, workflowPath,
         'add',
-        'Removed workflow alias should fail',
+        'Unknown workflow option should fail',
       ],
       cwd: testRepo.path,
       env: isolatedEnv.env,
@@ -103,7 +105,7 @@ describe('E2E: Config priority (workflow / autoPr)', () => {
     });
 
     expect(result.exitCode).toBe(1);
-    expect(`${result.stdout}${result.stderr}`).toContain(`unknown option '${removedWorkflowAlias}'`);
+    expect(`${result.stdout}${result.stderr}`).toContain(`unknown option '${unexpectedWorkflowCliOptionFlag}'`);
   }, 240_000);
 
   it('should default auto_pr to true when unset in config/env', () => {

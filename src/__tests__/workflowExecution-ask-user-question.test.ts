@@ -337,9 +337,6 @@ describe('executeWorkflow AskUserQuestion deny handler wiring', () => {
     expect(vi.mocked(error)).toHaveBeenCalledWith(
       expect.stringContaining('Workflow aborted after 1 iterations'),
     );
-    expect(vi.mocked(error)).not.toHaveBeenCalledWith(
-      expect.stringContaining('Piece aborted after'),
-    );
     expect(vi.mocked(info)).toHaveBeenCalledWith('Session log: /tmp/test-log.jsonl');
   });
 });

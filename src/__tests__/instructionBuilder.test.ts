@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { findDeprecatedTerms } from '../../test/helpers/deprecated-terminology.js';
 import {
   InstructionBuilder,
   isOutputContractItem,
@@ -25,16 +26,6 @@ function buildStatusJudgmentInstruction(step: WorkflowStep, ctx: StatusJudgmentC
   return new StatusJudgmentBuilder(step, ctx).build();
 }
 import type { WorkflowStep, WorkflowRule } from '../core/models/index.js';
-
-const removedInstructionTerms = {
-  oldWorkflowTitle: ['P', 'i', 'e', 'c', 'e'].join(''),
-  oldStepTitle: ['M', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join(''),
-};
-
-function legacyLowercase(term: string): string {
-  return term.toLowerCase();
-}
-
 
 function createMinimalStep(template: string): WorkflowStep {
   return {
@@ -108,7 +99,7 @@ describe('instruction-builder', () => {
       const result = buildInstruction(step, context);
 
       expect(result).toContain('Editing is ENABLED for this step.');
-      expect(result).not.toContain(`Editing is ENABLED for this ${legacyLowercase(removedInstructionTerms.oldStepTitle)}.`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
     });
 
     it('should include edit disabled prompt when step.edit is false', () => {
@@ -118,7 +109,7 @@ describe('instruction-builder', () => {
       const result = buildInstruction(step, context);
 
       expect(result).toContain('Editing is DISABLED for this step.');
-      expect(result).not.toContain(`Editing is DISABLED for this ${legacyLowercase(removedInstructionTerms.oldStepTitle)}.`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
     });
 
     it('should not include edit prompt when step.edit is undefined', () => {
@@ -481,9 +472,7 @@ describe('instruction-builder', () => {
       expect(result).toContain('- Iteration: 3/20');
       expect(result).toContain('- Step Iteration: 2');
       expect(result).toContain('- Step: implement');
-      expect(result).not.toContain(`- ${removedInstructionTerms.oldWorkflowTitle}:`);
-      expect(result).not.toContain(`- ${removedInstructionTerms.oldStepTitle} Iteration:`);
-      expect(result).not.toContain(`- ${removedInstructionTerms.oldStepTitle}: implement`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
     });
 
     it('should include report info in Phase 1 when step has report', () => {
@@ -569,9 +558,7 @@ describe('instruction-builder', () => {
       expect(result).toContain('- Step 2: implement');
       expect(result).toContain('← current');
       expect(result).toContain('- Step 3: review');
-      expect(result).not.toContain(`This ${legacyLowercase(removedInstructionTerms.oldWorkflowTitle)} consists of 3 steps:`);
-      expect(result).not.toContain(`- ${removedInstructionTerms.oldStepTitle} 1: plan`);
-      expect(result).not.toContain(`- ${removedInstructionTerms.oldStepTitle} 2: implement`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
     });
 
     it('should mark current step with marker', () => {
@@ -884,7 +871,7 @@ describe('instruction-builder', () => {
       const result = buildReportInstruction(step, ctx);
 
       expect(result).toContain('## Workflow Context');
-      expect(result).not.toContain(`## ${removedInstructionTerms.oldWorkflowTitle} Context`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
     });
 
     it('should NOT include user request, previous response, or status rules', () => {
@@ -913,7 +900,7 @@ describe('instruction-builder', () => {
       expect(result).toContain('あなたが今行った作業の結果をレポートとして回答してください');
       expect(result).toContain('プロジェクトのソースファイルを変更しないでください');
       expect(result).toContain('## Workflow Context');
-      expect(result).not.toContain(`## ${removedInstructionTerms.oldWorkflowTitle} Context`);
+      expect(findDeprecatedTerms(result)).toEqual([]);
       expect(result).toContain('**レポート出力:** `Report File` に出力してください。');
     });
 

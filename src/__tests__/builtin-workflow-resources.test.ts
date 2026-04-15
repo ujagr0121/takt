@@ -24,7 +24,6 @@ describe('getBuiltinWorkflowsDir', () => {
 
   it('should not use the removed legacy directory segment as the builtin workflow root', () => {
     const enDir = getBuiltinWorkflowsDir('en');
-    expect(enDir).not.toMatch(/[/\\]pieces[/\\]?$/);
     expect(enDir).toMatch(/[/\\]workflows$/);
   });
 });
@@ -53,7 +52,7 @@ describe('workflowResolver builtin layer uses workflows directory', () => {
     expect(existsSync(join(dir, 'default.yaml'))).toBe(true);
   });
 
-  // Regression: builtin review-default must live under workflows/, not the removed legacy directory. #565 / 565-TESTS-REVIEW-PIECE-PATH
+  // Regression: builtin review-default must live under workflows/. #565 / 565-TESTS-REVIEW-WORKFLOW-PATH
   it('should expose review-default.yaml under builtin workflows directory', () => {
     const path = join(getBuiltinWorkflowsDir('en'), 'review-default.yaml');
     expect(existsSync(path)).toBe(true);

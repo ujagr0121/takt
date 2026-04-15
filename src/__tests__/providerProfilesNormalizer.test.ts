@@ -2,14 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { normalizeProviderProfiles } from '../infra/config/configNormalizers.js';
 
 describe('normalizeProviderProfiles', () => {
-  it('rejects the removed legacy permission override key', () => {
-    expect(() => normalizeProviderProfiles({
+  it('normalizes provider profile overrides with canonical step keys', () => {
+    expect(normalizeProviderProfiles({
       codex: {
         default_permission_mode: 'full',
-        movement_permission_overrides: {
+        step_permission_overrides: {
           implement: 'edit',
         },
       },
-    })).toThrow(/movement_permission_overrides/i);
+    })).toEqual({
+      codex: {
+        defaultPermissionMode: 'full',
+        stepPermissionOverrides: {
+          implement: 'edit',
+        },
+      },
+    });
   });
 });

@@ -16,6 +16,12 @@ import {
 } from '../core/models/index.js';
 import { STATUS_VALUES } from '../core/models/status.js';
 import type { WorkflowTemplateReference } from '../core/models/index.js';
+import {
+  unexpectedInitialStepKey,
+  unexpectedMaxStepsKey,
+  unexpectedStepListKey,
+  unexpectedWorkflowConfigKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 describe('AgentTypeSchema', () => {
   it('should accept valid agent types', () => {
@@ -341,7 +347,7 @@ describe('WorkflowConfigRawSchema', () => {
     });
   });
 
-  it('should reject a removed workflow config alias when workflow_config is present', () => {
+  it('should reject an unknown workflow config alias when workflow_config is present', () => {
     const config = {
       name: 'test-workflow',
       workflow_config: {
@@ -349,7 +355,7 @@ describe('WorkflowConfigRawSchema', () => {
           codex: { network_access: true },
         },
       },
-      piece_config: {
+      [unexpectedWorkflowConfigKey]: {
         provider_options: {
           codex: { network_access: false },
         },
@@ -363,13 +369,15 @@ describe('WorkflowConfigRawSchema', () => {
       ],
     };
 
-    expect(() => WorkflowConfigRawSchema.parse(config)).toThrow(/piece_config|workflow_config|unrecognized/i);
+    expect(() => WorkflowConfigRawSchema.parse(config)).toThrow(
+      new RegExp(`${unexpectedWorkflowConfigKey}|workflow_config|unrecognized`, 'i'),
+    );
   });
 
-  it('should reject a removed step-list key', () => {
+  it('should reject an unknown step-list key', () => {
     const config = {
       name: 'legacy-step-list',
-      movements: [
+      [unexpectedStepListKey]: [
         {
           name: 'plan',
           persona: 'coder',
@@ -378,14 +386,16 @@ describe('WorkflowConfigRawSchema', () => {
       ],
     };
 
-    expect(() => WorkflowConfigRawSchema.parse(config as unknown)).toThrow(/movements|steps|unrecognized/i);
+    expect(() => WorkflowConfigRawSchema.parse(config as unknown)).toThrow(
+      new RegExp(`${unexpectedStepListKey}|steps|unrecognized`, 'i'),
+    );
   });
 
-  it('should reject removed step boundary keys', () => {
+  it('should reject unknown step boundary keys', () => {
     const config = {
       name: 'legacy-step-keys',
-      initial_movement: 'plan',
-      max_movements: 3,
+      [unexpectedInitialStepKey]: 'plan',
+      [unexpectedMaxStepsKey]: 3,
       steps: [
         {
           name: 'plan',
@@ -396,7 +406,7 @@ describe('WorkflowConfigRawSchema', () => {
     };
 
     expect(() => WorkflowConfigRawSchema.parse(config as unknown)).toThrow(
-      /initial_movement|max_movements|initial_step|max_steps|unrecognized/i,
+      new RegExp(`${unexpectedInitialStepKey}|${unexpectedMaxStepsKey}|initial_step|max_steps|unrecognized`, 'i'),
     );
   });
 

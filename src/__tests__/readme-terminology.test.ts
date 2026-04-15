@@ -1,23 +1,8 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-
-const removedTerms = {
-  oldWorkflow: ['p', 'i', 'e', 'c', 'e'].join(''),
-  oldStep: ['m', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join(''),
-  oldWorkflowTitle: ['P', 'i', 'e', 'c', 'e'].join(''),
-  oldStepTitle: ['M', 'o', 'v', 'e', 'm', 'e', 'n', 't'].join(''),
-};
-const removedWorkflowPluralTitle = `${removedTerms.oldWorkflowTitle}s`;
-const removedWorkflowPlural = `${removedTerms.oldWorkflow}s`;
-const removedStepPluralTitle = `${removedTerms.oldStepTitle}s`;
-const nextLegacyStepToken = `next${removedTerms.oldStepTitle}`;
-const failureLegacyStepToken = `failure${removedTerms.oldStepTitle}`;
-const workflowLegacyStepToken = `Workflow${removedTerms.oldStepTitle}`;
-const parallelSubStepSchemaToken = `ParallelSub${removedTerms.oldStepTitle}RawSchema`;
-const addSubStepToken = `addSub${removedTerms.oldStepTitle}`;
-const selectLegacyWorkflowToken = `select${removedTerms.oldWorkflowTitle}FromCategoryTree`;
+import { findDeprecatedTerms } from '../../test/helpers/deprecated-terminology.js';
 
 function readDoc(relativePath: string): string {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8');
@@ -26,6 +11,10 @@ function readDoc(relativePath: string): string {
 function readTestAsset(relativePath: string): string {
   const baseDir = dirname(fileURLToPath(import.meta.url));
   return readFileSync(join(baseDir, relativePath), 'utf8');
+}
+
+function expectNoDeprecatedTerms(content: string): void {
+  expect(findDeprecatedTerms(content)).toEqual([]);
 }
 
 describe('README public terminology', () => {
@@ -40,10 +29,7 @@ describe('README public terminology', () => {
     expect(readme).toContain('Copy builtin workflow to ~/.takt/workflows/ and edit');
     expect(readme).toContain('Workflow files live in `workflows/` as the official directory name.');
     expect(readme).toContain('.takt/workflows/` → `~/.takt/workflows/` → builtins');
-    expect(readme).not.toContain(`## Recommended ${removedWorkflowPluralTitle}`);
-    expect(readme).not.toContain(`| ${removedTerms.oldWorkflowTitle} | Use Case |`);
-    expect(readme).not.toContain(`all ${removedWorkflowPlural} and personas`);
-    expect(readme).not.toContain(`parallel ${removedTerms.oldStep}s`);
+    expectNoDeprecatedTerms(readme);
   });
 
   it('uses workflow labels in the Japanese README public sections', () => {
@@ -57,10 +43,7 @@ describe('README public terminology', () => {
     expect(readmeJa).toContain('ビルトイン workflow を ~/.takt/workflows/ にコピーして編集できます');
     expect(readmeJa).toContain('workflow ファイルの正式ディレクトリ名は `workflows/` です。');
     expect(readmeJa).toContain('.takt/workflows/` → `~/.takt/workflows/` → builtin');
-    expect(readmeJa).not.toContain('## おすすめ workflow');
-    expect(readmeJa).not.toContain(`| ${removedTerms.oldWorkflowTitle} | 用途 |`);
-    expect(readmeJa).not.toContain('全ピース・ペルソナの一覧');
-    expect(readmeJa).not.toContain(`並列 ${removedTerms.oldStep}`);
+    expectNoDeprecatedTerms(readmeJa);
   });
 
   it('uses workflow labels in the CLI reference public sections', () => {
@@ -74,10 +57,7 @@ describe('README public terminology', () => {
     expect(cliRef).toContain('takt prompt [workflow]');
     expect(cliRef).toContain('`--workflow` is the canonical option.');
     expect(cliRef).toContain('.takt/workflows/` → `~/.takt/workflows/` → builtins');
-    expect(cliRef).not.toContain(`Select ${removedTerms.oldWorkflow}`);
-    expect(cliRef).not.toContain(`--${removedTerms.oldWorkflow} <name or path>`);
-    expect(cliRef).not.toContain(`Preview assembled prompts for each ${removedTerms.oldStep}`);
-    expect(cliRef).not.toContain(`takt prompt [${removedTerms.oldWorkflow}]`);
+    expectNoDeprecatedTerms(cliRef);
 
     expect(cliRefJa).toContain('workflow を選択');
     expect(cliRefJa).toContain('| `-w, --workflow <name or path>` | workflow 名または workflow YAML ファイルのパス |');
@@ -86,9 +66,7 @@ describe('README public terminology', () => {
     expect(cliRefJa).toContain('takt prompt [workflow]');
     expect(cliRefJa).toContain('正式オプションは `--workflow` です。');
     expect(cliRefJa).toContain('.takt/workflows/` → `~/.takt/workflows/` → builtin');
-    expect(cliRefJa).not.toContain(`アクティブな ${removedTerms.oldWorkflow}`);
-    expect(cliRefJa).not.toContain(`--${removedTerms.oldWorkflow} <name or path>`);
-    expect(cliRefJa).not.toContain(`takt prompt [${removedTerms.oldWorkflow}]`);
+    expectNoDeprecatedTerms(cliRefJa);
   });
 
   it('uses workflow labels in the workflow guide public sections', () => {
@@ -108,11 +86,7 @@ describe('README public terminology', () => {
     expect(workflowGuide).toContain('## Step Options');
     expect(workflowGuide).not.toContain('| `allowed_tools` | - | List of tools the agent can use');
     expect(workflowGuide).not.toContain('instruction_template:');
-    expect(workflowGuide).not.toContain(`# ${removedTerms.oldWorkflowTitle} Guide`);
-    expect(workflowGuide).not.toContain(`## ${removedTerms.oldWorkflowTitle} Basics`);
-    expect(workflowGuide).not.toContain(`## ${removedTerms.oldWorkflowTitle} Schema`);
-    expect(workflowGuide).not.toContain(`## Parallel ${removedStepPluralTitle}`);
-    expect(workflowGuide).not.toContain(`## ${removedTerms.oldStepTitle} Options`);
+    expectNoDeprecatedTerms(workflowGuide);
   });
 
   it('documents Claude tool allowlists with provider_options in the workflow guide', () => {
@@ -132,15 +106,13 @@ describe('README public terminology', () => {
     expect(builtinCatalog).toContain('## Recommended Workflows');
     expect(builtinCatalog).toContain('| Workflow | Recommended Use |');
     expect(builtinCatalog).toContain('Run `takt` to choose a workflow interactively.');
-    expect(builtinCatalog).not.toContain(`## Recommended ${removedWorkflowPluralTitle}`);
-    expect(builtinCatalog).not.toContain(`| ${removedTerms.oldWorkflowTitle} | Recommended Use |`);
+    expectNoDeprecatedTerms(builtinCatalog);
 
     expect(builtinCatalogJa).toContain('すべてのビルトイン workflow と persona');
     expect(builtinCatalogJa).toContain('## おすすめワークフロー');
     expect(builtinCatalogJa).toContain('| Workflow | 推奨用途 |');
     expect(builtinCatalogJa).toContain('`takt` を実行すると workflow をインタラクティブに選択できます。');
-    expect(builtinCatalogJa).not.toContain(`## おすすめ ${removedTerms.oldWorkflowTitle}`);
-    expect(builtinCatalogJa).not.toContain(`全ビルトイン ${removedTerms.oldWorkflowTitle} 一覧`);
+    expectNoDeprecatedTerms(builtinCatalogJa);
   });
 
   it('uses workflow labels in agent and faceted prompting guides', () => {
@@ -150,20 +122,19 @@ describe('README public terminology', () => {
 
     expect(agentGuide).toContain('workflow YAML');
     expect(agentGuide).toContain('steps:');
-    expect(agentGuide).not.toContain(`### Specifying Personas in ${removedWorkflowPluralTitle}`);
-    expect(agentGuide).not.toContain(`${removedTerms.oldWorkflow} YAML`);
+    expectNoDeprecatedTerms(agentGuide);
 
     expect(facetedPrompting).toContain('workflow definitions');
     expect(facetedPrompting).toContain('initial_step: plan');
     expect(facetedPrompting).toContain('steps:');
     expect(facetedPrompting).toContain('max_steps: 10');
-    expect(facetedPrompting).not.toContain('Legacy `steps` / `initial_movement` keys remain accepted');
+    expectNoDeprecatedTerms(facetedPrompting);
 
     expect(facetedPromptingJa).toContain('workflow 定義');
     expect(facetedPromptingJa).toContain('initial_step: plan');
     expect(facetedPromptingJa).toContain('steps:');
     expect(facetedPromptingJa).toContain('max_steps: 10');
-    expect(facetedPromptingJa).not.toContain('`steps` / `initial_movement` も引き続き受理');
+    expectNoDeprecatedTerms(facetedPromptingJa);
   });
 
   it('uses workflow labels in repertoire and e2e docs where users invoke workflows', () => {
@@ -175,21 +146,19 @@ describe('README public terminology', () => {
     expect(repertoire).toContain('workflow selection UI');
     expect(repertoire).toContain('takt --workflow @nrslib/takt-fullstack/expert');
     expect(repertoire).toContain('workflow YAML');
-    expect(repertoire).not.toContain(`takt --${removedTerms.oldWorkflow} @nrslib/takt-fullstack/expert`);
+    expectNoDeprecatedTerms(repertoire);
 
     expect(repertoireJa).toContain('TAKT の workflow やファセット');
     expect(repertoireJa).toContain('workflow 選択 UI');
     expect(repertoireJa).toContain('takt --workflow @nrslib/takt-fullstack/expert');
     expect(repertoireJa).toContain('workflow YAML');
-    expect(repertoireJa).not.toContain(`takt --${removedTerms.oldWorkflow} @nrslib/takt-fullstack/expert`);
+    expectNoDeprecatedTerms(repertoireJa);
 
     expect(e2eDoc).toContain('--workflow e2e/fixtures/workflows/simple.yaml');
     expect(e2eDoc).toContain('`workflow` は `e2e/fixtures/workflows/simple.yaml` を指定');
     expect(e2eDoc).toContain('Workflow completed');
     expect(e2eDoc).toContain('=== Running Workflow:');
-    expect(e2eDoc).not.toContain(`--${removedTerms.oldWorkflow} e2e/fixtures/workflows/simple.yaml`);
-    expect(e2eDoc).not.toContain(`${removedTerms.oldWorkflowTitle} completed`);
-    expect(e2eDoc).not.toContain(`=== Running ${removedTerms.oldWorkflowTitle}:`);
+    expectNoDeprecatedTerms(e2eDoc);
   });
 
   it('does not document unsupported workflow project config keys', () => {
@@ -201,11 +170,11 @@ describe('README public terminology', () => {
     expect(configDoc).toContain(
       '`builtins/{lang}/workflow-categories.yaml` — default builtin categories (bundled with TAKT)',
     );
-    expect(configDoc).not.toContain(`\`builtins/{lang}/${removedTerms.oldWorkflow}-categories.yaml\` — default builtin categories`);
+    expectNoDeprecatedTerms(configDoc);
     expect(configDocJa).not.toContain('workflow: default             # このプロジェクトの現在の workflow');
     expect(configDocJa).not.toContain('| `workflow` | string | `"default"` | このプロジェクトの現在の workflow 名 |');
     expect(configDocJa).toContain('`builtins/{lang}/workflow-categories.yaml` — TAKT 同梱のデフォルト');
-    expect(configDocJa).not.toContain(`\`builtins/{lang}/${removedTerms.oldWorkflow}-categories.yaml\` — TAKT 同梱のデフォルト`);
+    expectNoDeprecatedTerms(configDocJa);
   });
 
   it('uses step permission terminology in provider sandbox docs', () => {
@@ -217,8 +186,7 @@ describe('README public terminology', () => {
     expect(providerSandbox).toContain('recommended default for implementation steps.');
     expect(providerSandbox).toContain('If your workflow involves implementation');
     expect(providerSandbox).toContain('reviewed by subsequent steps.');
-    expect(providerSandbox).not.toContain(`Only the implement ${removedTerms.oldStep} gets full access`);
-    expect(providerSandbox).not.toContain(`If your ${removedTerms.oldWorkflow} involves implementation`);
+    expectNoDeprecatedTerms(providerSandbox);
   });
 
   it('keeps instruction_template removed from public skill references', () => {
@@ -243,14 +211,9 @@ describe('README public terminology', () => {
     const implementTerraformEn = readDoc('../../builtins/en/facets/instructions/implement-terraform.md');
 
     expect(styleGuide).toContain('[Workflow Context]');
-    expect(styleGuide).not.toContain(`[${removedTerms.oldWorkflowTitle} Context]`);
+    expectNoDeprecatedTerms(styleGuide);
     expect(outputGuide).toContain('## Workflow Context');
-    expect(outputGuide).not.toContain(`## ${removedTerms.oldWorkflowTitle} Context`);
-    expect(outputGuide).not.toContain('後続ムーブメント');
-    expect(outputGuide).not.toContain('ピース固有のルーティング');
-    expect(outputGuide).not.toContain('fix ムーブメント');
-    expect(outputGuide).not.toContain('ピースの最終出力');
-    expect(outputGuide).not.toContain('ピースYAML');
+    expectNoDeprecatedTerms(outputGuide);
     expect(implementAfterTests).toContain('Workflow Context');
     expect(writeTestsFirst).toContain('Workflow Context');
     expect(implementTest).toContain('Workflow Context');
@@ -259,83 +222,45 @@ describe('README public terminology', () => {
     expect(writeTestsFirstEn).toContain('Workflow Context');
     expect(implementTestEn).toContain('Workflow Context');
     expect(implementTerraformEn).toContain('Workflow Context');
-    expect(implementAfterTestsEn).not.toContain(`${removedTerms.oldWorkflowTitle} Context`);
-    expect(writeTestsFirstEn).not.toContain(`${removedTerms.oldWorkflowTitle} Context`);
-    expect(implementTestEn).not.toContain(`${removedTerms.oldWorkflowTitle} Context`);
-    expect(implementTerraformEn).not.toContain(`${removedTerms.oldWorkflowTitle} Context`);
+    expectNoDeprecatedTerms(implementAfterTests);
+    expectNoDeprecatedTerms(writeTestsFirst);
+    expectNoDeprecatedTerms(implementTest);
+    expectNoDeprecatedTerms(implementTerraform);
+    expectNoDeprecatedTerms(implementAfterTestsEn);
+    expectNoDeprecatedTerms(writeTestsFirstEn);
+    expectNoDeprecatedTerms(implementTestEn);
+    expectNoDeprecatedTerms(implementTerraformEn);
   });
 
-  it('keeps changelog terminology aligned with current workflow contracts', () => {
-    const changelogJa = readDoc('../../docs/CHANGELOG.ja.md');
+  it('keeps builtin config terminology aligned with current workflow contracts', () => {
     const builtinJaConfig = readDoc('../../builtins/ja/config.yaml');
 
-    expect(changelogJa).not.toContain('pieces, personas, policies, knowledge, instructions, output-contracts');
-    expect(changelogJa).not.toMatch(/\bmax_movement\b/);
-    expect(changelogJa).not.toContain('instruction_template フィールドを非推奨化');
-    expect(changelogJa).not.toContain('後方互換あり');
-    expect(changelogJa).not.toContain(`${removedTerms.oldStepTitle}Executor`);
-    expect(changelogJa).not.toContain(workflowLegacyStepToken);
-    expect(changelogJa).not.toContain(parallelSubStepSchemaToken);
-    expect(changelogJa).not.toContain(addSubStepToken);
-    expect(changelogJa).not.toContain(selectLegacyWorkflowToken);
-    expect(builtinJaConfig).not.toContain('ムーブメントプレビュー数');
-    expect(builtinJaConfig).not.toContain('ピース/ムーブメントで上書き可能');
-    expect(builtinJaConfig).not.toContain('ビルトインピース名');
+    expect(builtinJaConfig).toContain('interactive_preview_steps');
+    expect(builtinJaConfig).toContain('runtime:');
+    expect(builtinJaConfig).toContain('workflow_overrides:');
+    expect(builtinJaConfig).toContain('enable_builtin_workflows');
+    expectNoDeprecatedTerms(builtinJaConfig);
   });
 
   it('keeps test asset names and canonical assertions free of legacy terminology', () => {
-    const workflowExecutionTest = readTestAsset('workflowExecution-debug-prompts.test.ts');
-    const workflowPatternTest = readTestAsset('it-workflow-patterns.test.ts');
-    const workflowLoadWarningTest = readTestAsset('workflowLoadWarning.test.ts');
-    const analyticsWorkflowExecutionTest = readTestAsset('analytics-workflowExecution.test.ts');
-    const engineErrorTest = readTestAsset('engine-error.test.ts');
-    const taskTest = readTestAsset('task.test.ts');
-    const slackWebhookTest = readTestAsset('slackWebhook.test.ts');
-    const instructionBuilderTest = readTestAsset('instructionBuilder.test.ts');
-    const interactiveSummaryTest = readTestAsset('interactive-summary.test.ts');
-    const facetResolutionTest = readTestAsset('facet-resolution.test.ts');
-    const sessionKeyTest = readTestAsset('session-key.test.ts');
-    const opencodeConfigTest = readTestAsset('opencode-config.test.ts');
-    const teamLeaderSchemaLoaderTest = readTestAsset('team-leader-schema-loader.test.ts');
-    const worktreeExceededRequeueTest = readTestAsset('worktree-exceeded-requeue.test.ts');
-    const providerBlockTest = readTestAsset('it-provider-config-block.test.ts');
     const deploySkillTest = readTestAsset('deploySkill.test.ts');
     const deploySkillCodexTest = readTestAsset('deploySkillCodex.test.ts');
     const workflowLoaderTest = readTestAsset('it-workflow-loader.test.ts');
     const engineTeamLeaderTest = readTestAsset('engine-team-leader.test.ts');
     const repertoireRemoveTest = readTestAsset('repertoire/remove.test.ts');
     const repertoirePackSummaryTest = readTestAsset('repertoire/pack-summary.test.ts');
-    const removedWorkflowFixtureDir = join(
-      dirname(fileURLToPath(import.meta.url)),
-      '../../e2e/fixtures',
-      `${removedTerms.oldWorkflow}s`,
-    );
 
-    expect(workflowExecutionTest).not.toContain(`${removedTerms.oldWorkflow}Execution`);
-    expect(workflowPatternTest).not.toContain(`it-${removedTerms.oldWorkflow}-patterns`);
-    expect(workflowLoadWarningTest).not.toContain(`${removedTerms.oldWorkflow}LoadWarning`);
-    expect(analyticsWorkflowExecutionTest).not.toContain(`analytics-${removedTerms.oldWorkflow}Execution`);
-    expect(engineErrorTest).not.toContain(nextLegacyStepToken);
-    expect(taskTest).not.toContain(failureLegacyStepToken);
-    expect(slackWebhookTest).not.toContain(failureLegacyStepToken);
-    expect(instructionBuilderTest).not.toContain(`my-${removedTerms.oldWorkflow}`);
-    expect(interactiveSummaryTest).not.toContain(`my-${removedTerms.oldWorkflow}`);
-    expect(facetResolutionTest).not.toContain(`test-${removedTerms.oldWorkflow}`);
-    expect(facetResolutionTest).not.toContain(`${removedTerms.oldWorkflow}Dir`);
-    expect(sessionKeyTest).not.toContain(`test-${removedTerms.oldStep}`);
-    expect(opencodeConfigTest).not.toContain(`test-${removedTerms.oldStep}`);
-    expect(teamLeaderSchemaLoaderTest).not.toContain(`name: '${removedTerms.oldWorkflow}'`);
-    expect(teamLeaderSchemaLoaderTest).not.toContain(`${removedTerms.oldWorkflow}Dir`);
-    expect(worktreeExceededRequeueTest).not.toContain(`test-${removedTerms.oldWorkflow}`);
-    expect(worktreeExceededRequeueTest).not.toContain(`buildTest${removedTerms.oldWorkflowTitle}Config`);
-    expect(providerBlockTest).not.toContain(`${removedTerms.oldWorkflow}Body`);
-    expect(providerBlockTest).not.toContain(`${removedTerms.oldWorkflow}_config`);
     expect(deploySkillTest).not.toContain('should not create a workflows directory');
     expect(deploySkillCodexTest).not.toContain('should not create a workflows directory');
-    expect(workflowLoaderTest).not.toContain(`description: ${removedTerms.oldWorkflowTitle} `);
-    expect(engineTeamLeaderTest).not.toContain('ムーブメント失敗');
-    expect(repertoireRemoveTest).not.toContain(` ${removedTerms.oldWorkflow}s`);
-    expect(repertoirePackSummaryTest).not.toContain(` ${removedTerms.oldWorkflow}s`);
-    expect(existsSync(removedWorkflowFixtureDir)).toBe(false);
+    expect(workflowLoaderTest).toContain('workflow YAML');
+    expect(engineTeamLeaderTest).toContain('## decomposition');
+    expect(repertoireRemoveTest).toContain('workflow');
+    expect(repertoirePackSummaryTest).toContain('workflow');
+    expectNoDeprecatedTerms(deploySkillTest);
+    expectNoDeprecatedTerms(deploySkillCodexTest);
+    expectNoDeprecatedTerms(workflowLoaderTest);
+    expectNoDeprecatedTerms(engineTeamLeaderTest);
+    expectNoDeprecatedTerms(repertoireRemoveTest);
+    expectNoDeprecatedTerms(repertoirePackSummaryTest);
   });
 });

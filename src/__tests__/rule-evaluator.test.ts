@@ -68,9 +68,9 @@ describe('RuleEvaluator', () => {
       const ctx = makeContext({ detectRuleIndex });
       const evaluator = new RuleEvaluator(step, ctx);
 
-      const result = await evaluator.evaluate('agent content', 'tag content with [TEST-MOVEMENT:1]');
+      const result = await evaluator.evaluate('agent content', 'tag content with [TEST-STEP:1]');
       expect(result).toEqual({ index: 0, method: 'phase3_tag' });
-      expect(detectRuleIndex).toHaveBeenCalledWith('tag content with [TEST-MOVEMENT:1]', 'test-step');
+      expect(detectRuleIndex).toHaveBeenCalledWith('tag content with [TEST-STEP:1]', 'test-step');
     });
 
     it('should fallback to Phase 1 tag when Phase 3 tag not found', async () => {

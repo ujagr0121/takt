@@ -8,6 +8,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import type { WorkflowWithSource } from '../infra/config/index.js';
+import {
+  unexpectedCategoryRootKey,
+  unexpectedWorkflowCategoryListKey,
+} from '../../test/helpers/unknown-contract-test-keys.js';
 
 const languageState = vi.hoisted(() => ({
   value: 'en' as 'en' | 'ja',
@@ -89,6 +93,10 @@ const {
   findWorkflowCategories,
 } = await import('../infra/config/loaders/workflowCategories.js');
 const { listBuiltinWorkflowNamesForDir } = await import('../infra/config/loaders/workflowDiscovery.js');
+const {
+  parseWorkflowCategoryConfig,
+  parseWorkflowCategoryOverlay,
+} = await import('../infra/config/loaders/workflowCategoryParser.js');
 
 function writeYaml(path: string, content: string): void {
   writeFileSync(path, content.trim() + '\n', 'utf-8');
@@ -298,6 +306,26 @@ others_category_name: Unclassified
     expect(config!.hasUserCategories).toBe(false);
     expect(config!.showOthersCategory).toBe(false);
     expect(config!.othersCategoryName).toBe('Unclassified');
+  });
+
+  it('should reject unknown root category key', () => {
+    expect(() => parseWorkflowCategoryConfig({
+      [unexpectedCategoryRootKey]: {
+        Quick: {
+          workflows: ['default'],
+        },
+      },
+    }, 'inline')).toThrow(new RegExp(`${unexpectedCategoryRootKey}|unrecognized`, 'i'));
+  });
+
+  it('should reject unknown workflow list key inside categories', () => {
+    expect(() => parseWorkflowCategoryOverlay({
+      workflow_categories: {
+        Mixed: {
+          [unexpectedWorkflowCategoryListKey]: ['default'],
+        },
+      },
+    }, 'inline')).toThrow(new RegExp(`${unexpectedWorkflowCategoryListKey}|object|array|invalid`, 'i'));
   });
 });
 

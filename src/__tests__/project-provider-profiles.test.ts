@@ -3,6 +3,7 @@ import { mkdirSync, rmSync, writeFileSync, existsSync, readFileSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomUUID } from 'node:crypto';
+import { unexpectedStepPermissionOverrideKey } from '../../test/helpers/unknown-contract-test-keys.js';
 
 import { loadProjectConfig, saveProjectConfig } from '../infra/config/project/projectConfig.js';
 
@@ -130,7 +131,7 @@ describe('project provider_profiles', () => {
     });
   });
 
-  it('rejects the removed provider profile override key in project config', () => {
+  it('rejects unknown provider profile override keys in project config', () => {
     const taktDir = join(testDir, '.takt');
     mkdirSync(taktDir, { recursive: true });
     writeFileSync(
@@ -139,13 +140,13 @@ describe('project provider_profiles', () => {
         'provider_profiles:',
         '  codex:',
         '    default_permission_mode: full',
-        '    movement_permission_overrides:',
+        `    ${unexpectedStepPermissionOverrideKey}:`,
         '      implement: full',
       ].join('\n'),
       'utf-8',
     );
 
-    expect(() => loadProjectConfig(testDir)).toThrow(/movement_permission_overrides/i);
+    expect(() => loadProjectConfig(testDir)).toThrow(new RegExp(`${unexpectedStepPermissionOverrideKey}|unrecognized`, 'i'));
   });
 
   it('rejects duplicate step_permission_overrides keys in project config', () => {
@@ -220,6 +221,5 @@ describe('project provider_profiles', () => {
     const raw = readFileSync(join(testDir, '.takt', 'config.yaml'), 'utf-8');
 
     expect(raw).toContain('step_permission_overrides:');
-    expect(raw).not.toContain('movement_permission_overrides:');
   });
 });
